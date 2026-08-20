@@ -43,9 +43,7 @@ namespace PongRoyale.Tests.EditMode
                     secondsPerElixirInDoubleMode: 1f),
                 new MatchRulesConfig(
                     matchDurationSeconds: 180f,
-                    doubleElixirLastSeconds: 60f,
-                    overtimeDurationSeconds: 60f,
-                    tiebreak: TiebreakRule.SuddenDeath),
+                    doubleElixirLastSeconds: 60f),
                 new TrophyConfig(onWin: 30, onLoss: -25, onDraw: 0));
         }
     }

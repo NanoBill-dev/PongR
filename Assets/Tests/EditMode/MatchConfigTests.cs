@@ -14,9 +14,7 @@ namespace PongRoyale.Tests.EditMode
         {
             var rules = new MatchRulesConfig(
                 matchDurationSeconds: 180f,
-                doubleElixirLastSeconds: 60f,
-                overtimeDurationSeconds: 60f,
-                tiebreak: TiebreakRule.SuddenDeath);
+                doubleElixirLastSeconds: 60f);
 
             Assert.AreEqual(120f, rules.DoubleElixirStartTime, 1e-4f);
         }

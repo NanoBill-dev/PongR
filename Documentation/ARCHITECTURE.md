@@ -115,6 +115,27 @@ nada, ja que quem escreve e sempre o proprio Core.
 **Nota de nomenclatura:** existe o namespace `PongRoyale.Core.Ball`, entao nenhum tipo do
 Core pode se chamar `Ball`. Vale o mesmo para `Paddle`.
 
+## ADR-007 — Desempate em cascata, sem prorrogacao
+
+**Decisao (do game designer, 2026-08-20):** a partida termina assim:
+
+1. Torre Rei destruida encerra imediatamente. As duas no mesmo tick (possivel com
+   Multibola) e empate.
+2. Tempo esgotado, em cascata: mais torres de pe vence; empatado em torres, mais vida
+   somada vence; identico nos dois, empate e a tela oferece revanche.
+
+**Consequencia:** nao existe prorrogacao. `MatchPhase.Overtime`, `OvertimeDurationSeconds`
+e o enum `TiebreakRule` foram REMOVIDOS por virarem codigo morto. Se prorrogacao voltar um
+dia, volta como fase nova, nao como configuracao orfa.
+
+**Detalhe que parece igual mas nao e:** o criterio conta as PROPRIAS torres vivas, nao
+"torres que o jogador destruiu". Quando a bola de um jogador derruba a torre dele mesmo, o
+contador de destruicoes credita o adversario e daria o desempate ao lado errado. O que
+esta de pe nao mente.
+
+**Generalizacao aplicada:** o criterio de vida vale para qualquer empate em contagem de
+torres (3x3, 2x2, 1x1), nao apenas com todas de pe.
+
 ## Convencoes
 
 - Namespace raiz `PongRoyale`, espelhando a pasta (`PongRoyale.Core.Simulation`).

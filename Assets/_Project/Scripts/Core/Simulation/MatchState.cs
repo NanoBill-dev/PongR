@@ -65,6 +65,43 @@ namespace PongRoyale.Core.Simulation
 
         public bool IsKingAlive(PlayerSlot slot) => GetTower(slot, TowerKind.King).IsAlive;
 
+        /// <summary>
+        /// Torres do jogador ainda de pe. Primeiro criterio de desempate.
+        ///
+        /// Conta as PROPRIAS torres vivas, e nao "torres que este jogador destruiu": se a
+        /// bola de um jogador derruba a torre dele mesmo, o contador de destruicoes credita
+        /// o adversario e daria um desempate errado. O que esta de pe nao mente.
+        /// </summary>
+        public int CountAliveTowers(PlayerSlot slot)
+        {
+            int alive = 0;
+            int first = slot.ToIndex() * TowersPerPlayer;
+
+            for (int i = first; i < first + TowersPerPlayer; i++)
+            {
+                if (Towers[i].IsAlive)
+                {
+                    alive++;
+                }
+            }
+
+            return alive;
+        }
+
+        /// <summary>Vida somada das torres do jogador. Segundo criterio de desempate.</summary>
+        public float TotalTowerHealth(PlayerSlot slot)
+        {
+            float total = 0f;
+            int first = slot.ToIndex() * TowersPerPlayer;
+
+            for (int i = first; i < first + TowersPerPlayer; i++)
+            {
+                total += Towers[i].Health;
+            }
+
+            return total;
+        }
+
         public int CountActiveBalls()
         {
             int active = 0;

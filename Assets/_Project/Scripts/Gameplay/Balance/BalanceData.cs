@@ -56,11 +56,7 @@ namespace PongRoyale.Gameplay.Balance
                     elixir.startingElixir,
                     elixir.secondsPerElixir,
                     elixir.secondsPerElixirInDoubleMode),
-                new MatchRulesConfig(
-                    rules.matchDurationSeconds,
-                    rules.doubleElixirLastSeconds,
-                    rules.overtimeDurationSeconds,
-                    rules.tiebreak),
+                new MatchRulesConfig(rules.matchDurationSeconds, rules.doubleElixirLastSeconds),
                 new TrophyConfig(trophies.onWin, trophies.onLoss, trophies.onDraw));
         }
 
@@ -167,11 +163,6 @@ namespace PongRoyale.Gameplay.Balance
 
             [Tooltip("Segundos finais com elixir em ritmo dobrado.")]
             [Min(0f)] public float doubleElixirLastSeconds = 60f;
-
-            [Min(0f)] public float overtimeDurationSeconds = 60f;
-
-            [Tooltip("Como decidir a partida se ninguem derrubar a Torre Rei.")]
-            public TiebreakRule tiebreak = TiebreakRule.SuddenDeath;
         }
 
         [Serializable]

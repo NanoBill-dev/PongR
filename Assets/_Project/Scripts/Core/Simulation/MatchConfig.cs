@@ -173,19 +173,10 @@ namespace PongRoyale.Core.Simulation
         /// <summary>Quantos segundos finais rodam com elixir em ritmo dobrado.</summary>
         public readonly float DoubleElixirLastSeconds;
 
-        public readonly float OvertimeDurationSeconds;
-        public readonly TiebreakRule Tiebreak;
-
-        public MatchRulesConfig(
-            float matchDurationSeconds,
-            float doubleElixirLastSeconds,
-            float overtimeDurationSeconds,
-            TiebreakRule tiebreak)
+        public MatchRulesConfig(float matchDurationSeconds, float doubleElixirLastSeconds)
         {
             MatchDurationSeconds = matchDurationSeconds;
             DoubleElixirLastSeconds = doubleElixirLastSeconds;
-            OvertimeDurationSeconds = overtimeDurationSeconds;
-            Tiebreak = tiebreak;
         }
 
         /// <summary>Instante, em segundos desde o inicio, em que o elixir dobra o ritmo.</summary>

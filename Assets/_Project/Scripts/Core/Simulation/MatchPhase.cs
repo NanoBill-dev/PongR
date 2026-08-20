@@ -9,10 +9,7 @@ namespace PongRoyale.Core.Simulation
         /// <summary>Partida em andamento.</summary>
         Playing = 1,
 
-        /// <summary>Prorrogacao apos o tempo regulamentar sem Torre Rei destruida.</summary>
-        Overtime = 2,
-
         /// <summary>Resultado definido. A simulacao nao avanca mais.</summary>
-        Finished = 3
+        Finished = 2
     }
 }
