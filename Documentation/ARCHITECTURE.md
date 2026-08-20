@@ -136,6 +136,36 @@ esta de pe nao mente.
 **Generalizacao aplicada:** o criterio de vida vale para qualquer empate em contagem de
 torres (3x3, 2x2, 1x1), nao apenas com todas de pe.
 
+## ADR-008 — Passo fixo por contrato e ordem das operacoes no tick
+
+**Decisao:** `MatchSimulation.Tick()` NAO aceita deltaTime. O passo e sempre
+`MatchConstants.FixedDeltaTime`. Quem chama acumula o tempo real e chama Tick quantas
+vezes couber no frame.
+
+**Por que:** aceitar deltaTime variavel faria o resultado depender do frame rate do
+aparelho, quebrando replay, teste reproduzivel e sincronizacao com o servidor de uma vez
+so. Nao aceitar o parametro torna o erro impossivel, em vez de apenas desaconselhado.
+
+**Ordem dentro do tick, e o motivo de cada posicao:**
+
+1. Comandos — o input deste tick vale neste tick. Um tick de atraso na propria raquete e
+   a latencia que mais se sente num jogo de reflexo.
+2. Raquetes — antes da bola, para PreviousPositionX estar correto e a varredura relativa
+   funcionar.
+3. Bolas — varrem contra as raquetes ja atualizadas.
+4. Relogio — ANTES de avaliar. Avaliar antes de somar o tempo faria a partida terminar um
+   tick depois do apito.
+5. Resultado — por ultimo, com o dano e o tempo deste tick ja contabilizados.
+
+**A simulacao nunca limpa a fila de eventos.** Quem consome chama Clear, uma vez por frame,
+depois de desenhar. Se o Tick limpasse, um frame que rodasse varios ticks perderia os
+eventos de todos menos o ultimo, e o jogador veria uma torre cair sem som nem efeito.
+
+**Teste dourado:** `MatchStateHash` resume o estado via FNV-1a sobre os BITS dos floats.
+Uma sequencia fixa de 1800 ticks precisa produzir sempre o mesmo hash. Quando esse teste
+falhar, o COMPORTAMENTO mudou: confirme que a mudanca era intencional antes de atualizar o
+numero. O mesmo hash serve para detectar divergencia entre cliente e servidor na FASE 3.
+
 ## Convencoes
 
 - Namespace raiz `PongRoyale`, espelhando a pasta (`PongRoyale.Core.Simulation`).
