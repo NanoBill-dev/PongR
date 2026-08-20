@@ -13,7 +13,7 @@
 
 ## FASE 1 — Pong jogavel offline
 - [x] T9  Core: MatchState, MatchCommand, MatchEvent, MatchStateFactory (MatchSnapshot adiado para a FASE 3: formato de rede sem rede e especulacao)
-- [ ] T10 Core: BallResolver + CollisionMath (varredura) + testes
+- [x] T10 Core: BallResolver + CollisionMath (varredura) + testes
 - [ ] T11 Core: PaddleResolver + limites + testes
 - [ ] T12 Core: TowerState + DamageResolver + condicao de vitoria + testes
 - [ ] T13 Core: MatchSimulation.Tick() + teste de hash dourado
