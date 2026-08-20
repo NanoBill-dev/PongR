@@ -1,6 +1,6 @@
 # Pong Royale — Roadmap
 
-## FASE 0 — Setup
+## FASE 0 — Setup (concluida, exceto T2b)
 - [x] T1 Git + .gitignore + .gitattributes + LFS + UnityYAMLMerge
 - [x] T2 ProjectSettings: nome, company, orientacao retrato fixa
 - [x] T3 Limpeza de pacotes (20 removidos)
@@ -8,8 +8,8 @@
 - [x] T5 9 Assembly Definitions (Core com noEngineReferences)
 - [x] T7 Assets/Tests + primeiro teste EditMode verde
 - [ ] T2b Android Build Support + bundle id + IL2CPP/ARM64 (depende do modulo no Hub)
-- [ ] T6 Cenas Bootstrap / MainMenu / Match + SceneLoader
-- [ ] T8 BalanceDataSO com todos os numeros das secoes 11/13/14
+- [x] T6 Cenas Bootstrap / MainMenu / Match + SceneLoader
+- [x] T8 BalanceData com todos os numeros das secoes 11/13/14
 
 ## FASE 1 — Pong jogavel offline
 - [ ] T9  Core: MatchState, MatchConfig, MatchCommand, MatchSnapshot, MatchEvent

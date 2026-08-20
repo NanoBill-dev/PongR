@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f16e383d11d2d3b4cb62dc834edf6617, type: 3}
+  m_Name: DefaultBalance
+  m_EditorClassIdentifier: PongRoyale.Gameplay::PongRoyale.Gameplay.Balance.BalanceData
+  arena:
+    width: 10
+    height: 18
+    paddleLineOffsetFromEdge: 2.5
+  ball:
+    initialSpeed: 8
+    maxSpeed: 25
+    speedGainPerHit: 0.02
+    radius: 0.25
+    baseDamage: 250
+    maxDeflectionFromNormalDegrees: 60
+    minAngleFromHorizontalDegrees: 20
+  paddle:
+    width: 2.4
+    thickness: 0.4
+    maxSpeed: 18
+    smoothingTime: 0.05
+    dragSensitivity: 1
+  towers:
+    kingMaxHealth: 5000
+    guardMaxHealth: 2500
+    guardOffsetFromCenter: 3.2
+  elixir:
+    maxElixir: 10
+    startingElixir: 5
+    secondsPerElixir: 2
+    secondsPerElixirInDoubleMode: 1
+  rules:
+    matchDurationSeconds: 180
+    doubleElixirLastSeconds: 60
+    overtimeDurationSeconds: 60
+    tiebreak: 0
+  trophies:
+    onWin: 30
+    onLoss: -25
+    onDraw: 0
