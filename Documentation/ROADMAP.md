@@ -1,0 +1,42 @@
+# Pong Royale — Roadmap
+
+## FASE 0 — Setup
+- [x] T1 Git + .gitignore + .gitattributes + LFS + UnityYAMLMerge
+- [x] T2 ProjectSettings: nome, company, orientacao retrato fixa
+- [x] T3 Limpeza de pacotes (20 removidos)
+- [x] T4 Arvore Assets/_Project + Documentation
+- [x] T5 9 Assembly Definitions (Core com noEngineReferences)
+- [x] T7 Assets/Tests + primeiro teste EditMode verde
+- [ ] T2b Android Build Support + bundle id + IL2CPP/ARM64 (depende do modulo no Hub)
+- [ ] T6 Cenas Bootstrap / MainMenu / Match + SceneLoader
+- [ ] T8 BalanceDataSO com todos os numeros das secoes 11/13/14
+
+## FASE 1 — Pong jogavel offline
+- [ ] T9  Core: MatchState, MatchConfig, MatchCommand, MatchSnapshot, MatchEvent
+- [ ] T10 Core: BallResolver + CollisionMath (varredura) + testes
+- [ ] T11 Core: PaddleResolver + limites + testes
+- [ ] T12 Core: TowerState + DamageResolver + condicao de vitoria + testes
+- [ ] T13 Core: MatchSimulation.Tick() + teste de hash dourado
+- [ ] T14 Unity: MatchRunner, views, camera, arena com placeholders
+- [ ] T15 Input System + TouchPaddleInput + AiPaddleInput
+
+**Pronto quando:** da para jogar Pong contra a IA e a regra esta 100% testada em EditMode.
+
+## FASE 2 — Nucleo Pong Royale
+Elixir, deck 8 / mao 4, 8 cartas, HUD, VFX/SFX basicos.
+Ordem das cartas, da mais simples para a mais dificil:
+Muro -> Escudo -> Congelamento -> Turbina -> Canhao -> Ima -> Portal -> Multibola.
+
+**Pronto quando:** partida completa com cartas, divertida contra bot.
+
+## FASE 3 — Multiplayer
+Spike NGO (2 dias) -> lobby -> spawn -> snapshot/extrapolacao -> resultado -> reconexao.
+
+**Pronto quando:** dois celulares reais completam uma partida 1v1 em 4G.
+
+## FASE 4-7
+Progressao -> conteudo -> monetizacao -> polish. Ver secao 30 do prompt mestre.
+
+## Decisoes em aberto
+- D5 Backend de contas/progressao (UGS, PlayFab ou proprio) — decidir na FASE 4.
+  No MVP: interface `IPlayerProfileService` com implementacao local em JSON.

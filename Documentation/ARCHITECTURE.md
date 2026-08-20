@@ -1,0 +1,109 @@
+# Pong Royale — Arquitetura
+
+Documento vivo. Registra as decisoes estruturais e o porque delas.
+Ultima revisao: 2026-08-20 (FASE 0).
+
+## Visao geral das camadas
+
+```
+PongRoyale.Core          C# puro, sem UnityEngine. Toda a REGRA do jogo.
+  ^ MatchCommand           entra: intencao do jogador
+  v MatchSnapshot          sai: estado + fila de MatchEvent
+PongRoyale.Gameplay      Views, input sources, mapeamento ScriptableObject -> Core, pooling
+PongRoyale.Presentation  HUD, VFX, SFX, camera. Le snapshot/eventos, nunca escreve regra
+PongRoyale.Networking    Transporta MatchCommand e MatchSnapshot. Nao conhece regra
+PongRoyale.Services      Matchmaking, perfil, analytics (interfaces + fakes locais)
+PongRoyale.App           Composition root. Unica assembly que conhece todas as outras
+PongRoyale.Editor        Ferramentas de autoria (Editor-only)
+```
+
+Dependencias sao impostas pelo compilador via Assembly Definitions. `PongRoyale.Core`
+tem `noEngineReferences: true`, o que torna **impossivel** chamar `Time.deltaTime`,
+`Debug.Log` ou `Random.value` dentro da regra de jogo.
+
+## ADR-001 — Simulacao em C# puro, fora de MonoBehaviour
+
+**Decisao:** toda a regra vive em `MatchSimulation.Tick(commands, dt)`, sem MonoBehaviour.
+
+**Por que:** o mesmo codigo roda no servidor headless, no cliente (predicao) e em testes
+EditMode, sem duplicacao. Testar elixir, dano e rotacao de deck vira teste unitario de
+milissegundos. Trocar a stack de rede toca uma unica assembly.
+
+**Custo aceito:** e preciso escrever a ponte Core -> GameObject manualmente.
+
+## ADR-002 — Fisica da bola custom, sem Rigidbody2D
+
+**Decisao:** simulacao cinematica com passo fixo de 1/60s e colisao por varredura
+(swept circle vs segmentos). Colliders da engine, se existirem, servem apenas para
+queries de mira de carta — nunca para decidir resultado competitivo.
+
+**Por que:**
+1. A 25 u/s a bola anda ~0,42 u por tick: risco de tunneling atraves de raquetes finas.
+2. Pong bom nao usa reflexao fisica. O angulo de saida vem do offset do impacto na
+   raquete — isso e a skill do jogo. Fisica realista da controle pobre.
+3. `Rigidbody2D` nao e deterministico nem serializavel: inviabiliza replay, teste
+   reproduzivel e validacao server-side.
+
+**Alvo de determinismo:** reproduzivel na mesma plataforma (suficiente para testes e
+replays). Determinismo bit-exact entre ARM e x86 NAO e requisito, porque o modelo e
+server-authoritative.
+
+## ADR-003 — Arena em retrato, raquete horizontal
+
+**Decisao:** celular em pe. Raquete do jogador na base movendo no eixo X, adversario no
+topo, torres (Rei ao centro + 2 laterais) nas duas extremidades. Arena 10 x 18 unidades,
+camera ortografica, 1 unidade = 1 metro.
+
+**Por que:** ergonomia de uma mao so e leitura visual coerente com o layout de torres.
+Em retrato com raquetes laterais a arena ficaria estreita demais e os angulos de
+rebatida degenerados.
+
+**Atencao:** isto SOBRESCREVE a secao 13 do prompt mestre, que pedia arraste vertical.
+
+## ADR-004 — Netcode: NGO + Relay no MVP, servidor dedicado depois
+
+**Decisao:** Netcode for GameObjects 2.x + Unity Relay/Lobby, host sendo um dos jogadores.
+Simulacao 60 Hz, snapshot 20 Hz, input 30 Hz.
+
+**Predicao:** o cliente prediz apenas a propria raquete (1 eixo, reconciliacao trivial).
+A bola e **extrapolada**, nao interpolada: o snapshot carrega posicao, velocidade e um
+`CollisionSequence` (ushort) incrementado a cada colisao. Entre colisoes o movimento e
+retilineo uniforme, entao `pos + vel * dt` e exato. Quando `CollisionSequence` muda, o
+cliente corrige suavemente em ~80 ms. E isso que faz a bola parecer local a 150 ms de RTT.
+
+**Risco aceito no MVP:** host tem autoridade, logo cheat e viavel. Aceitavel enquanto nao
+houver ranked real. Migrar para servidor dedicado e trocar quem chama `Tick()`, nao rewrite.
+
+**Plano B:** Photon Fusion 2, se um spike de 2 dias no inicio da FASE 3 mostrar que NGO
+nao atende.
+
+## ADR-005 — ScriptableObject e camada de autoria, nao de runtime
+
+```
+CardDefinitionSO   (Unity, autoria no Inspector)
+   -> CardConfig       (struct imutavel do Core, serializavel na rede)
+   -> CardEffectRuntime (estado mutavel: duracao restante, alvo)
+```
+
+**Por que:** o Core nao pode referenciar `ScriptableObject` (nao tem UnityEngine), e SO
+com estado mutavel vaza entre partidas no Editor e quebra no servidor.
+
+**Regras:** toda carta tem um `ushort CardId` estavel — a rede trafega o id, nunca o nome.
+`BalanceDataSO` centraliza velocidade, dano, custos, regen de elixir e trofeus.
+Nenhum numero de gameplay hardcoded em script.
+
+## Convencoes
+
+- Namespace raiz `PongRoyale`, espelhando a pasta (`PongRoyale.Core.Simulation`).
+- Regra competitiva NUNCA em MonoBehaviour.
+- Comunicacao Core -> Presentation por fila de eventos por tick, nunca chamada direta.
+- Constante estrutural (tick rate) fica em `MatchConstants`. Numero de gameplay fica em SO.
+
+## Versionamento
+
+- Unity fixado em `6000.5.9f1` (unica versao instalada). Reavaliar migracao para LTS
+  antes da FASE 3, quando o custo ainda e aceitavel.
+- Git LFS cobre binarios pesados de autoria (psd, tga, wav, fbx...). `.png`/`.jpg` ficam
+  fora do LFS de proposito: sprites 2D sao pequenos e queimariam a cota gratuita do
+  GitHub. Migrar depois e possivel com `git lfs migrate import --include="*.png"`
+  (reescreve historico — trivial em repo solo, doloroso em equipe).
