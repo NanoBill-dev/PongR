@@ -166,6 +166,31 @@ Uma sequencia fixa de 1800 ticks precisa produzir sempre o mesmo hash. Quando es
 falhar, o COMPORTAMENTO mudou: confirme que a mudanca era intencional antes de atualizar o
 numero. O mesmo hash serve para detectar divergencia entre cliente e servidor na FASE 3.
 
+## ADR-009 — Ferramentas de Editor: I/O primeiro, referencias depois
+
+**Armadilha encontrada em 2026-08-20, custou uma cena silenciosamente quebrada:**
+`AssetDatabase.LoadAssetAtPath` devolve uma referencia que MORRE na proxima importacao de
+asset. `AssetDatabase.Refresh`, `SaveAndReimport`, `PrefabUtility.SaveAsPrefabAsset` e ate
+`EditorSceneManager.OpenScene` importam.
+
+Como o operador `==` do Unity trata objeto destruido como `null`, atribuir uma referencia
+morta a um campo grava NULL — sem excecao, sem aviso no console, e passando em todo teste
+de EditMode. O sintoma so aparece com o jogo rodando.
+
+**Regra para toda ferramenta de Editor deste projeto:**
+
+1. Fazer TODO o I/O de asset primeiro (criar arquivos, importar, salvar prefabs).
+2. So entao carregar as referencias que serao usadas.
+3. Montar a cena por ultimo, sem novas importacoes no meio.
+4. VALIDAR o proprio resultado antes de salvar, e recusar salvar se algo ficou nulo.
+
+O passo 4 e o que transforma essa classe de falha em erro barulhento. Uma ferramenta que
+loga sucesso e entrega cena quebrada e pior que uma que falha.
+
+**Corolario de testes:** os 99 testes de EditMode passaram o tempo todo com a cena
+quebrada. Fiacao de cena so e verificavel em PlayMode — por isso a suite PlayMode existe e
+checa referencias atribuidas, views seguindo o estado e enquadramento da camera.
+
 ## Convencoes
 
 - Namespace raiz `PongRoyale`, espelhando a pasta (`PongRoyale.Core.Simulation`).

@@ -17,7 +17,7 @@
 - [x] T11 Core: PaddleResolver + limites + varredura relativa + testes
 - [x] T12 Core: MatchOutcomeResolver (cascata de desempate) + testes
 - [x] T13 Core: MatchSimulation.Tick() + teste de hash dourado
-- [ ] T14 Unity: MatchRunner, views, camera, arena com placeholders
+- [x] T14 Unity: MatchRunner, views, camera, arena com placeholders (+8 testes PlayMode)
 - [ ] T15 Input System + TouchPaddleInput + AiPaddleInput
 
 **Pronto quando:** da para jogar Pong contra a IA e a regra esta 100% testada em EditMode.
