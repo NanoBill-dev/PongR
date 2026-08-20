@@ -12,7 +12,7 @@
 - [x] T8 BalanceData com todos os numeros das secoes 11/13/14
 
 ## FASE 1 — Pong jogavel offline
-- [ ] T9  Core: MatchState, MatchConfig, MatchCommand, MatchSnapshot, MatchEvent
+- [x] T9  Core: MatchState, MatchCommand, MatchEvent, MatchStateFactory (MatchSnapshot adiado para a FASE 3: formato de rede sem rede e especulacao)
 - [ ] T10 Core: BallResolver + CollisionMath (varredura) + testes
 - [ ] T11 Core: PaddleResolver + limites + testes
 - [ ] T12 Core: TowerState + DamageResolver + condicao de vitoria + testes

@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace PongRoyale.Core.Simulation
 {
     /// <summary>
@@ -110,11 +112,29 @@ namespace PongRoyale.Core.Simulation
         /// <summary>Distancia em X do centro ate cada torre lateral.</summary>
         public readonly float GuardOffsetFromCenter;
 
-        public TowerConfig(float kingMaxHealth, float guardMaxHealth, float guardOffsetFromCenter)
+        /// <summary>Distancia da borda da arena ate a linha das torres.</summary>
+        public readonly float RowOffsetFromEdge;
+
+        /// <summary>Meias-extensoes da Torre Rei, usadas na colisao da bola.</summary>
+        public readonly Vector2 KingHalfSize;
+
+        /// <summary>Meias-extensoes das torres laterais.</summary>
+        public readonly Vector2 GuardHalfSize;
+
+        public TowerConfig(
+            float kingMaxHealth,
+            float guardMaxHealth,
+            float guardOffsetFromCenter,
+            float rowOffsetFromEdge,
+            Vector2 kingHalfSize,
+            Vector2 guardHalfSize)
         {
             KingMaxHealth = kingMaxHealth;
             GuardMaxHealth = guardMaxHealth;
             GuardOffsetFromCenter = guardOffsetFromCenter;
+            RowOffsetFromEdge = rowOffsetFromEdge;
+            KingHalfSize = kingHalfSize;
+            GuardHalfSize = guardHalfSize;
         }
     }
 

@@ -92,6 +92,29 @@ com estado mutavel vaza entre partidas no Editor e quebra no servidor.
 `BalanceDataSO` centraliza velocidade, dano, custos, regen de elixir e trofeus.
 Nenhum numero de gameplay hardcoded em script.
 
+## ADR-006 — System.Numerics.Vector2 no Core, structs mutaveis em array
+
+**Decisao:** o Core usa `System.Numerics.Vector2` como tipo de vetor, e o estado de
+simulacao (bola, raquete, torre) sao structs MUTAVEIS guardados em arrays de tamanho fixo,
+com campos publicos.
+
+**Por que o vetor:** o Core nao pode referenciar UnityEngine (ADR-001), e escrever um
+`Vec2` proprio seria reinventar matematica ja testada. Verificado em batchmode: resolve
+normalmente numa assembly com `noEngineReferences: true`. A conversao para
+`UnityEngine.Vector2` fica numa extension method na fronteira, em Gameplay.
+
+**Por que struct mutavel:** `state.Balls[i].Position = x` escreve no lugar, sem alocacao
+por tick. NUNCA guardar esses structs em `List<T>`: o indexador de List devolve uma copia
+e a escrita seria perdida em silencio. Pela mesma razao `MatchState.GetTower` devolve
+`ref` — ha um teste dedicado a isso, porque a regressao seria invisivel ao compilador.
+
+**Por que campos publicos:** isto e dado de simulacao, nao objeto de dominio. O
+comportamento mora nos resolvers. Propriedades custariam chamadas por tick sem proteger
+nada, ja que quem escreve e sempre o proprio Core.
+
+**Nota de nomenclatura:** existe o namespace `PongRoyale.Core.Ball`, entao nenhum tipo do
+Core pode se chamar `Ball`. Vale o mesmo para `Paddle`.
+
 ## Convencoes
 
 - Namespace raiz `PongRoyale`, espelhando a pasta (`PongRoyale.Core.Simulation`).

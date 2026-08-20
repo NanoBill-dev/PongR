@@ -44,7 +44,13 @@ namespace PongRoyale.Gameplay.Balance
                     paddle.maxSpeed,
                     paddle.smoothingTime,
                     paddle.dragSensitivity),
-                new TowerConfig(towers.kingMaxHealth, towers.guardMaxHealth, towers.guardOffsetFromCenter),
+                new TowerConfig(
+                    towers.kingMaxHealth,
+                    towers.guardMaxHealth,
+                    towers.guardOffsetFromCenter,
+                    towers.rowOffsetFromEdge,
+                    ToNumerics(towers.kingHalfSize),
+                    ToNumerics(towers.guardHalfSize)),
                 new ElixirConfig(
                     elixir.maxElixir,
                     elixir.startingElixir,
@@ -57,6 +63,13 @@ namespace PongRoyale.Gameplay.Balance
                     rules.tiebreak),
                 new TrophyConfig(trophies.onWin, trophies.onLoss, trophies.onDraw));
         }
+
+        /// <summary>
+        /// Ponte de vetor entre as camadas: o Inspector edita UnityEngine.Vector2, mas o
+        /// Core so conhece System.Numerics.Vector2 porque nao referencia a engine (ADR-001).
+        /// </summary>
+        private static System.Numerics.Vector2 ToNumerics(Vector2 value) =>
+            new System.Numerics.Vector2(value.x, value.y);
 
         private void OnValidate()
         {
@@ -123,6 +136,15 @@ namespace PongRoyale.Gameplay.Balance
 
             [Tooltip("Distancia em X do centro ate cada torre lateral.")]
             [Min(0f)] public float guardOffsetFromCenter = 3.2f;
+
+            [Tooltip("Distancia da borda da arena ate a linha das torres.")]
+            [Min(0.1f)] public float rowOffsetFromEdge = 1f;
+
+            [Tooltip("Meias-extensoes da Torre Rei, usadas na colisao da bola.")]
+            public Vector2 kingHalfSize = new Vector2(1.2f, 0.8f);
+
+            [Tooltip("Meias-extensoes das torres laterais.")]
+            public Vector2 guardHalfSize = new Vector2(0.9f, 0.7f);
         }
 
         [Serializable]
