@@ -1,0 +1,56 @@
+# ---------------------------------------------
+# Unity - gerado pelo editor / nao versionar
+# ---------------------------------------------
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Meta files sao OBRIGATORIOS para assets versionados
+!/[Aa]ssets/**/*.meta
+
+# Ferramentas de terceiros
+/[Aa]ssets/AssetStoreTools*
+/[Aa]ssets/Plugins/Editor/JetBrains*
+
+# IDE / solucoes geradas automaticamente
+.vs/
+.idea/
+.gradle/
+ExportedObj/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.tmp
+
+# Relatorios de crash
+sysinfo.txt
+crashlytics-build.properties
+
+# Builds empacotados
+*.apk
+*.aab
+*.ipa
+*.app
+*.unitypackage
+
+# Addressables (quando entrarem)
+/[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+/[Aa]ssets/[Ss]treamingAssets/aa.meta
+/[Aa]ssets/[Ss]treamingAssets/aa/*
