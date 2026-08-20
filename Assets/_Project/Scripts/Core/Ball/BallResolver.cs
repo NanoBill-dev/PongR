@@ -43,12 +43,20 @@ namespace PongRoyale.Core.Ball
             public readonly SurfaceKind Kind;
             public readonly int Index;
 
-            public SurfaceHit(float time, Vector2 normal, SurfaceKind kind, int index)
+            /// <summary>
+            /// Posicao em X da superficie NO INSTANTE do contato. Importa para a raquete,
+            /// que se move durante o tick: usar a posicao final daria um offset errado e,
+            /// com ele, um angulo de saida errado.
+            /// </summary>
+            public readonly float SurfaceX;
+
+            public SurfaceHit(float time, Vector2 normal, SurfaceKind kind, int index, float surfaceX)
             {
                 Time = time;
                 Normal = normal;
                 Kind = kind;
                 Index = index;
+                SurfaceX = surfaceX;
             }
         }
 
@@ -79,7 +87,12 @@ namespace PongRoyale.Core.Ball
             {
                 Vector2 delta = ball.Direction * (ball.CurrentSpeed * remaining);
 
-                if (!TryFindEarliestHit(state, in ball, delta, out SurfaceHit hit))
+                // Fracao do tick que esta fatia representa. As raquetes se deslocam ao longo
+                // do tick inteiro, entao a parte delas que cabe nesta fatia precisa ser
+                // proporcional ao tempo que ainda resta.
+                float timeScale = deltaTime > MinRemainingTime ? remaining / deltaTime : 0f;
+
+                if (!TryFindEarliestHit(state, in ball, delta, timeScale, out SurfaceHit hit))
                 {
                     ball.Position += delta;
                     break;
@@ -100,6 +113,7 @@ namespace PongRoyale.Core.Ball
             MatchState state,
             in BallState ball,
             Vector2 delta,
+            float timeScale,
             out SurfaceHit hit)
         {
             hit = default;
@@ -113,7 +127,7 @@ namespace PongRoyale.Core.Ball
                 && wallTime < bestTime)
             {
                 bestTime = wallTime;
-                hit = new SurfaceHit(wallTime, wallNormal, SurfaceKind.Wall, 0);
+                hit = new SurfaceHit(wallTime, wallNormal, SurfaceKind.Wall, 0, 0f);
                 found = true;
             }
 
@@ -123,15 +137,23 @@ namespace PongRoyale.Core.Ball
 
             for (int i = 0; i < state.Paddles.Length; i++)
             {
-                var paddleCenter = new Vector2(state.Paddles[i].PositionX, state.Paddles[i].LineY);
+                // Varredura RELATIVA: a raquete tambem se moveu neste tick. Resolver no
+                // referencial dela e o que impede um arraste rapido de passar por dentro
+                // da bola — que seria a rebatida "fantasma" mais frustrante possivel.
+                float paddleTravel = (state.Paddles[i].PositionX - state.Paddles[i].PreviousPositionX) * timeScale;
+                float paddleStartX = state.Paddles[i].PositionX - paddleTravel;
+
+                var paddleCenter = new Vector2(paddleStartX, state.Paddles[i].LineY);
+                var relativeDelta = new Vector2(delta.X - paddleTravel, delta.Y);
 
                 if (CollisionMath.SweepCircleVsBox(
-                        ball.Position, delta, state.Config.Ball.Radius, paddleCenter, paddleHalfSize,
+                        ball.Position, relativeDelta, state.Config.Ball.Radius, paddleCenter, paddleHalfSize,
                         out float paddleTime, out Vector2 paddleNormal)
                     && paddleTime < bestTime)
                 {
                     bestTime = paddleTime;
-                    hit = new SurfaceHit(paddleTime, paddleNormal, SurfaceKind.Paddle, i);
+                    float contactX = paddleStartX + paddleTravel * paddleTime;
+                    hit = new SurfaceHit(paddleTime, paddleNormal, SurfaceKind.Paddle, i, contactX);
                     found = true;
                 }
             }
@@ -152,7 +174,7 @@ namespace PongRoyale.Core.Ball
                     && towerTime < bestTime)
                 {
                     bestTime = towerTime;
-                    hit = new SurfaceHit(towerTime, towerNormal, SurfaceKind.Tower, i);
+                    hit = new SurfaceHit(towerTime, towerNormal, SurfaceKind.Tower, i, state.Towers[i].Position.X);
                     found = true;
                 }
             }
@@ -209,7 +231,7 @@ namespace PongRoyale.Core.Ball
 
             float offset = CollisionMath.NormalizedPaddleOffset(
                 ball.Position.X,
-                state.Paddles[hit.Index].PositionX,
+                hit.SurfaceX,
                 state.Config.Paddle.HalfWidth);
 
             // A normal aponta para dentro da arena: a raquete de baixo devolve para cima.

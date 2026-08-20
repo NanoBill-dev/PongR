@@ -10,6 +10,13 @@ namespace PongRoyale.Core.Paddle
         /// <summary>Posicao atual no eixo X, em unidades de mundo.</summary>
         public float PositionX;
 
+        /// <summary>
+        /// Onde a raquete estava no inicio do tick. A bola usa este valor para varrer
+        /// contra uma raquete EM MOVIMENTO: sem ele a raquete e tratada como estatica e
+        /// pode passar por dentro da bola quando o jogador arrasta rapido.
+        /// </summary>
+        public float PreviousPositionX;
+
         /// <summary>Posicao fixa no eixo Y, definida pela arena no inicio da partida.</summary>
         public float LineY;
 
@@ -24,6 +31,7 @@ namespace PongRoyale.Core.Paddle
             return new PaddleState
             {
                 PositionX = 0f,
+                PreviousPositionX = 0f,
                 LineY = lineY,
                 VelocityX = 0f,
                 TargetX = 0f

@@ -4,6 +4,7 @@ using NUnit.Framework;
 using PongRoyale.Core.Ball;
 using PongRoyale.Core.Combat;
 using PongRoyale.Core.Events;
+using PongRoyale.Core.Paddle;
 using PongRoyale.Core.Simulation;
 
 namespace PongRoyale.Tests.EditMode
@@ -34,13 +35,36 @@ namespace PongRoyale.Tests.EditMode
         /// <summary>Tira as raquetes do caminho para testar a bola contra outras superficies.</summary>
         private void MovePaddlesAside()
         {
-            state.GetPaddle(PlayerSlot.Bottom).PositionX = 4f;
-            state.GetPaddle(PlayerSlot.Top).PositionX = 4f;
+            SetPaddleX(PlayerSlot.Bottom, 4f);
+            SetPaddleX(PlayerSlot.Top, 4f);
         }
 
         private void PlaceBall(Vector2 position, Vector2 direction, float speed)
         {
             state.Balls[0] = BallState.Create(position, direction, speed, state.Config.Ball.BaseDamage);
+        }
+
+        /// <summary>
+        /// Reposiciona a raquete como se ela sempre tivesse estado ali. Precisa mexer em
+        /// PreviousPositionX tambem: a varredura e relativa, e deixar o valor anterior para
+        /// tras faria a raquete parecer estar viajando a dezenas de unidades por tick.
+        /// </summary>
+        private void SetPaddleX(PlayerSlot slot, float x)
+        {
+            ref PaddleState paddle = ref state.GetPaddle(slot);
+            paddle.PositionX = x;
+            paddle.PreviousPositionX = x;
+            paddle.TargetX = x;
+        }
+
+        /// <summary>Coloca a raquete em movimento entre dois pontos dentro do mesmo tick.</summary>
+        private void SweepPaddle(PlayerSlot slot, float fromX, float toX)
+        {
+            ref PaddleState paddle = ref state.GetPaddle(slot);
+            paddle.PreviousPositionX = fromX;
+            paddle.PositionX = toX;
+            paddle.TargetX = toX;
+            paddle.VelocityX = (toX - fromX) / MatchConstants.FixedDeltaTime;
         }
 
         [Test]
@@ -95,8 +119,8 @@ namespace PongRoyale.Tests.EditMode
         {
             // Raquetes alinhadas no centro: a bola fica num vai-e-vem vertical e acumula
             // rebatidas ate bater no teto de velocidade.
-            state.GetPaddle(PlayerSlot.Bottom).PositionX = 0f;
-            state.GetPaddle(PlayerSlot.Top).PositionX = 0f;
+            SetPaddleX(PlayerSlot.Bottom, 0f);
+            SetPaddleX(PlayerSlot.Top, 0f);
             PlaceBall(Vector2.Zero, new Vector2(0f, -1f), 8f);
 
             Step(ticks: 12000);
@@ -109,7 +133,7 @@ namespace PongRoyale.Tests.EditMode
         public void HittingTheRightSideOfThePaddleSendsTheBallRight()
         {
             // A raquete esta deslocada para a esquerda, entao a bola toca na metade direita.
-            state.GetPaddle(PlayerSlot.Bottom).PositionX = -0.8f;
+            SetPaddleX(PlayerSlot.Bottom, -0.8f);
             PlaceBall(new Vector2(0f, -6.0f), new Vector2(0f, -1f), 8f);
 
             Step(2);
@@ -120,7 +144,7 @@ namespace PongRoyale.Tests.EditMode
         [Test]
         public void HittingTheLeftSideOfThePaddleSendsTheBallLeft()
         {
-            state.GetPaddle(PlayerSlot.Bottom).PositionX = 0.8f;
+            SetPaddleX(PlayerSlot.Bottom, 0.8f);
             PlaceBall(new Vector2(0f, -6.0f), new Vector2(0f, -1f), 8f);
 
             Step(2);
@@ -131,7 +155,7 @@ namespace PongRoyale.Tests.EditMode
         [Test]
         public void CenterHitReturnsTheBallStraight()
         {
-            state.GetPaddle(PlayerSlot.Bottom).PositionX = 0f;
+            SetPaddleX(PlayerSlot.Bottom, 0f);
             PlaceBall(new Vector2(0f, -6.0f), new Vector2(0f, -1f), 8f);
 
             Step(2);
@@ -145,7 +169,7 @@ namespace PongRoyale.Tests.EditMode
             // 200 u/s e oito vezes o teto do jogo. Serve para provar que a solucao e por
             // varredura de verdade, e nao um teste de sobreposicao que so parece funcionar
             // porque as velocidades atuais sao baixas.
-            state.GetPaddle(PlayerSlot.Bottom).PositionX = 0f;
+            SetPaddleX(PlayerSlot.Bottom, 0f);
             PlaceBall(new Vector2(0f, -6.0f), new Vector2(0f, -1f), 200f);
 
             Step();
@@ -212,8 +236,8 @@ namespace PongRoyale.Tests.EditMode
                     new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)),
                     state.Config.Ball.InitialSpeed);
 
-                state.GetPaddle(PlayerSlot.Bottom).PositionX = (float)(random.NextDouble() * 6.0 - 3.0);
-                state.GetPaddle(PlayerSlot.Top).PositionX = (float)(random.NextDouble() * 6.0 - 3.0);
+                SetPaddleX(PlayerSlot.Bottom, (float)(random.NextDouble() * 6.0 - 3.0));
+                SetPaddleX(PlayerSlot.Top, (float)(random.NextDouble() * 6.0 - 3.0));
 
                 for (int tick = 0; tick < 600; tick++)
                 {
@@ -236,8 +260,8 @@ namespace PongRoyale.Tests.EditMode
         [Test]
         public void BallNeverExceedsTheSpeedCeilingDuringALongRally()
         {
-            state.GetPaddle(PlayerSlot.Bottom).PositionX = 0f;
-            state.GetPaddle(PlayerSlot.Top).PositionX = 0f;
+            SetPaddleX(PlayerSlot.Bottom, 0f);
+            SetPaddleX(PlayerSlot.Top, 0f);
             PlaceBall(Vector2.Zero, new Vector2(0.2f, -1f), 8f);
 
             for (int tick = 0; tick < 6000; tick++)
@@ -286,6 +310,39 @@ namespace PongRoyale.Tests.EditMode
             Assert.Greater(state.Balls[0].Position.Y, 0f);
             Assert.Less(state.Balls[1].Position.Y, 0f);
             Assert.AreEqual(2, state.CountActiveBalls());
+        }
+
+        [Test]
+        public void MovingPaddleUsesTheContactPositionForTheAngle()
+        {
+            // Este e o ganho REAL da varredura relativa nas velocidades do jogo. A raquete
+            // percorre 0.3 no tick (18 u/s, exatamente o teto) e termina centrada na bola.
+            // Tratando-a como estatica, o offset daria zero e a bola voltaria reta; na
+            // verdade ela tocou a metade direita da raquete e precisa sair para a direita.
+            PlaceBall(new Vector2(0f, -6.0f), new Vector2(0f, -1f), 8f);
+            SweepPaddle(PlayerSlot.Bottom, fromX: -0.3f, toX: 0f);
+
+            Step();
+
+            Assert.Greater(state.Balls[0].Direction.Y, 0f);
+            Assert.Greater(
+                state.Balls[0].Direction.X,
+                0f,
+                "O angulo saiu da posicao final da raquete, e nao da posicao no instante do toque.");
+        }
+
+        [Test]
+        public void PaddleTeleportingSidewaysStillCatchesTheBall()
+        {
+            // Deslocamento de 6 unidades num tick e 360 u/s: vinte vezes acima do teto de
+            // uma raquete humana. Nao acontece hoje — o teste existe porque cartas futuras
+            // podem reposicionar a raquete, e a solucao ja precisa aguentar isso.
+            PlaceBall(new Vector2(0f, -6.0f), new Vector2(0f, -1f), 8f);
+            SweepPaddle(PlayerSlot.Bottom, fromX: -3f, toX: 3f);
+
+            Step();
+
+            Assert.Greater(state.Balls[0].Direction.Y, 0f, "A raquete varreu a bola e deveria te-la rebatido.");
         }
 
         private bool HasEvent(MatchEventType type)
