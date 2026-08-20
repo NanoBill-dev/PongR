@@ -1,0 +1,17 @@
+{
+    "name": "PongRoyale.Gameplay",
+    "rootNamespace": "PongRoyale.Gameplay",
+    "references": [
+        "PongRoyale.Core",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

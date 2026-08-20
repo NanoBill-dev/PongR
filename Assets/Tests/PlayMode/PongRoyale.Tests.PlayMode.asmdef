@@ -1,0 +1,26 @@
+{
+    "name": "PongRoyale.Tests.PlayMode",
+    "rootNamespace": "PongRoyale.Tests.PlayMode",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "PongRoyale.Core",
+        "PongRoyale.Gameplay",
+        "PongRoyale.Presentation",
+        "PongRoyale.Services",
+        "PongRoyale.App"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

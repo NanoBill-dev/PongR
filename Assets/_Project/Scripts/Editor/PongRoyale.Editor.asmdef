@@ -1,0 +1,23 @@
+{
+    "name": "PongRoyale.Editor",
+    "rootNamespace": "PongRoyale.Editor",
+    "references": [
+        "PongRoyale.Core",
+        "PongRoyale.Gameplay",
+        "PongRoyale.Presentation",
+        "PongRoyale.Networking",
+        "PongRoyale.Services",
+        "PongRoyale.App"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

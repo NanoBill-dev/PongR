@@ -1,0 +1,20 @@
+{
+    "name": "PongRoyale.App",
+    "rootNamespace": "PongRoyale.App",
+    "references": [
+        "PongRoyale.Core",
+        "PongRoyale.Gameplay",
+        "PongRoyale.Presentation",
+        "PongRoyale.Networking",
+        "PongRoyale.Services"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

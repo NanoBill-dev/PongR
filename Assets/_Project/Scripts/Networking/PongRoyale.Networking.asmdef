@@ -1,0 +1,16 @@
+{
+    "name": "PongRoyale.Networking",
+    "rootNamespace": "PongRoyale.Networking",
+    "references": [
+        "PongRoyale.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
