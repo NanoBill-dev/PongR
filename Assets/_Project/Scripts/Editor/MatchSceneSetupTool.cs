@@ -8,6 +8,7 @@ using PongRoyale.Gameplay.Ball;
 using PongRoyale.Gameplay.Paddle;
 using PongRoyale.Gameplay.Towers;
 using PongRoyale.Presentation.CameraRig;
+using PongRoyale.Presentation.Hud;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -98,6 +99,7 @@ namespace PongRoyale.Editor
             CreateTowers(towerPrefab, runner);
             CreateBall(ballPrefab, runner);
             CreateInput(runner, camera);
+            CreateHud(runner, square, config);
 
             // A ferramenta valida o proprio resultado. Uma referencia perdida aqui nao
             // quebra compilacao nem teste de EditMode: quebraria so a partida, na tela.
@@ -113,6 +115,186 @@ namespace PongRoyale.Editor
             AssetDatabase.SaveAssets();
 
             Debug.Log("[MatchScene] Cena Match reconstruida a partir do BalanceData.");
+        }
+
+        private const int HudBackgroundSortingOrder = 90;
+        private const int HudFillSortingOrder = 91;
+        private const int HudTextSortingOrder = 100;
+        private const int DamageNumberCount = 12;
+
+        /// <summary>
+        /// Monta a HUD: vida das torres, numeros de dano, relogio e painel de resultado.
+        ///
+        /// Usa TextMesh e nao TextMeshPro de proposito. O TMP exige um font asset importado
+        /// por menu, o que uma ferramenta em batchmode nao consegue garantir; o TextMesh usa
+        /// a fonte embutida do Unity e funciona sem nenhum asset no projeto. Quando a arte
+        /// real entrar na FASE 5, trocar para TMP e um ajuste de apresentacao, nao de logica.
+        /// </summary>
+        private static void CreateHud(MatchRunner runner, Sprite square, MatchConfig config)
+        {
+            Font font = LoadBuiltinFont();
+            if (font == null)
+            {
+                Debug.LogError("[MatchScene] Fonte embutida nao encontrada. A HUD nao foi criada.");
+                return;
+            }
+
+            var root = new GameObject("Hud");
+
+            foreach (PlayerSlot slot in new[] { PlayerSlot.Bottom, PlayerSlot.Top })
+            {
+                foreach (TowerKind kind in new[] { TowerKind.King, TowerKind.LeftGuard, TowerKind.RightGuard })
+                {
+                    CreateTowerHealth(root.transform, runner, square, font, slot, kind);
+                }
+            }
+
+            CreateClock(root.transform, runner, font, config);
+            CreateResultPanel(root.transform, runner, square, font, config);
+            CreateDamageNumbers(root.transform, runner, font);
+        }
+
+        private static void CreateTowerHealth(
+            Transform parent, MatchRunner runner, Sprite square, Font font, PlayerSlot slot, TowerKind kind)
+        {
+            var host = new GameObject($"TowerHealth_{slot}_{kind}");
+            host.transform.SetParent(parent, worldPositionStays: false);
+
+            var background = CreateSpriteObject(
+                "Background", square, new Color(0.08f, 0.09f, 0.13f, 0.9f), HudBackgroundSortingOrder,
+                Vector3.zero, Vector3.one, host.transform);
+
+            var fill = CreateSpriteObject(
+                "Fill", square, Color.green, HudFillSortingOrder,
+                Vector3.zero, Vector3.one, host.transform);
+
+            TextMesh label = CreateLabel(
+                "Label", host.transform, font, characterSize: 0.05f, fontSize: 60,
+                sortingOrder: HudTextSortingOrder, anchor: TextAnchor.MiddleCenter);
+            label.transform.localPosition = new Vector3(0f, 0.32f, 0f);
+
+            var view = host.AddComponent<TowerHealthView>();
+            var serialized = new SerializedObject(view);
+            serialized.FindProperty("runner").objectReferenceValue = runner;
+            serialized.FindProperty("owner").enumValueIndex = (int)slot;
+            serialized.FindProperty("kind").enumValueIndex = (int)kind;
+            serialized.FindProperty("barFill").objectReferenceValue = fill.transform;
+            serialized.FindProperty("barBackground").objectReferenceValue =
+                background.GetComponent<SpriteRenderer>();
+            serialized.FindProperty("barFillRenderer").objectReferenceValue =
+                fill.GetComponent<SpriteRenderer>();
+            serialized.FindProperty("label").objectReferenceValue = label;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void CreateClock(Transform parent, MatchRunner runner, Font font, MatchConfig config)
+        {
+            var host = new GameObject("MatchClock");
+            host.transform.SetParent(parent, worldPositionStays: false);
+
+            TextMesh label = CreateLabel(
+                "Label", host.transform, font, characterSize: 0.09f, fontSize: 60,
+                sortingOrder: HudTextSortingOrder, anchor: TextAnchor.MiddleCenter);
+
+            // Na margem vertical que sobra acima da arena em telas altas.
+            label.transform.position = new Vector3(0f, config.Arena.HalfHeight + 0.75f, 0f);
+
+            var view = host.AddComponent<MatchClockView>();
+            var serialized = new SerializedObject(view);
+            serialized.FindProperty("runner").objectReferenceValue = runner;
+            serialized.FindProperty("label").objectReferenceValue = label;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void CreateResultPanel(
+            Transform parent, MatchRunner runner, Sprite square, Font font, MatchConfig config)
+        {
+            var host = new GameObject("MatchResult");
+            host.transform.SetParent(parent, worldPositionStays: false);
+
+            var backdrop = CreateSpriteObject(
+                "Backdrop", square, new Color(0.03f, 0.03f, 0.06f, 0.75f), HudBackgroundSortingOrder + 5,
+                Vector3.zero, new Vector3(config.Arena.Width, config.Arena.Height, 1f), host.transform);
+
+            TextMesh label = CreateLabel(
+                "Label", host.transform, font, characterSize: 0.10f, fontSize: 60,
+                sortingOrder: HudTextSortingOrder + 5, anchor: TextAnchor.MiddleCenter);
+
+            var view = host.AddComponent<MatchResultView>();
+            var serialized = new SerializedObject(view);
+            serialized.FindProperty("runner").objectReferenceValue = runner;
+            serialized.FindProperty("label").objectReferenceValue = label;
+            serialized.FindProperty("backdrop").objectReferenceValue = backdrop.GetComponent<SpriteRenderer>();
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void CreateDamageNumbers(Transform parent, MatchRunner runner, Font font)
+        {
+            var host = new GameObject("DamageNumbers");
+            host.transform.SetParent(parent, worldPositionStays: false);
+
+            var labels = new TextMesh[DamageNumberCount];
+            for (int i = 0; i < DamageNumberCount; i++)
+            {
+                labels[i] = CreateLabel(
+                    $"Damage_{i}", host.transform, font, characterSize: 0.06f, fontSize: 60,
+                    sortingOrder: HudTextSortingOrder, anchor: TextAnchor.MiddleCenter);
+            }
+
+            var view = host.AddComponent<DamageNumbersView>();
+            var serialized = new SerializedObject(view);
+            serialized.FindProperty("runner").objectReferenceValue = runner;
+
+            SerializedProperty array = serialized.FindProperty("labels");
+            array.arraySize = DamageNumberCount;
+            for (int i = 0; i < DamageNumberCount; i++)
+            {
+                array.GetArrayElementAtIndex(i).objectReferenceValue = labels[i];
+            }
+
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static TextMesh CreateLabel(
+            string name, Transform parent, Font font,
+            float characterSize, int fontSize, int sortingOrder, TextAnchor anchor)
+        {
+            var host = new GameObject(name, typeof(TextMesh));
+            host.transform.SetParent(parent, worldPositionStays: false);
+
+            var text = host.GetComponent<TextMesh>();
+            text.font = font;
+            text.fontSize = fontSize;
+            text.characterSize = characterSize;
+            text.anchor = anchor;
+            text.alignment = TextAlignment.Center;
+            text.color = Color.white;
+
+            var renderer = host.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = font.material;
+            renderer.sortingOrder = sortingOrder;
+
+            return text;
+        }
+
+        /// <summary>
+        /// Fonte embutida do Unity. O nome mudou entre versoes, entao ha uma cadeia de
+        /// tentativas em vez de um nome cravado.
+        /// </summary>
+        private static Font LoadBuiltinFont()
+        {
+            string[] candidates = { "LegacyRuntime.ttf", "Arial.ttf" };
+
+            foreach (string candidate in candidates)
+            {
+                var font = Resources.GetBuiltinResource<Font>(candidate);
+                if (font != null)
+                {
+                    return font;
+                }
+            }
+
+            return null;
         }
 
         private static void ClearScene(Scene scene)

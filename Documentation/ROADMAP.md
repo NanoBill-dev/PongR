@@ -22,7 +22,8 @@
 
 **Pronto:** da para jogar Pong contra a IA. 108 testes EditMode + 10 PlayMode.
 
-## FASE 2 — Nucleo Pong Royale
+## FASE 2 — Nucleo Pong Royale (em andamento)
+- [x] HUD v1: vida das torres com numero, dano flutuante, relogio, painel de resultado
 Elixir, deck 8 / mao 4, 8 cartas, HUD, VFX/SFX basicos.
 Ordem das cartas, da mais simples para a mais dificil:
 Muro -> Escudo -> Congelamento -> Turbina -> Canhao -> Ima -> Portal -> Multibola.
