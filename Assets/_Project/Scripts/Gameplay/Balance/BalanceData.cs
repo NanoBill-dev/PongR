@@ -1,4 +1,5 @@
 using System;
+using PongRoyale.Core.Effects;
 using PongRoyale.Core.Simulation;
 using UnityEngine;
 
@@ -24,6 +25,10 @@ namespace PongRoyale.Gameplay.Balance
         [SerializeField] private ElixirSettings elixir = new ElixirSettings();
         [SerializeField] private MatchRulesSettings rules = new MatchRulesSettings();
         [SerializeField] private EffectSettings effects = new EffectSettings();
+
+        [Tooltip("Cartas que sao apenas multiplicadores. Cada linha e uma carta inteira, " +
+                 "sem codigo dedicado. Cartas com logica propria nao entram aqui.")]
+        [SerializeField] private ModifierCardSettings[] modifierCards = DefaultModifierCards();
         [SerializeField] private TrophySettings trophies = new TrophySettings();
 
         /// <summary>Converte os dados de autoria no pacote imutavel consumido pela simulacao.</summary>
@@ -60,8 +65,32 @@ namespace PongRoyale.Gameplay.Balance
                     elixir.maxDefenseCharges,
                     elixir.cleanCyclesForRedemption),
                 new MatchRulesConfig(rules.matchDurationSeconds, rules.finalStretchSeconds),
-                new EffectConfig(effects.defaultDurationSeconds, effects.combinedDurationSeconds),
+                new EffectConfig(
+                    effects.defaultDurationSeconds,
+                    effects.combinedDurationSeconds,
+                    BuildModifiers()),
                 new TrophyConfig(trophies.onWin, trophies.onLoss, trophies.onDraw));
+        }
+
+        /// <summary>
+        /// Traduz as cartas-multiplicador editadas no Inspector para a tabela que a
+        /// simulacao consulta. Uma carta destas nao tem codigo: existe so como linha aqui.
+        /// </summary>
+        private EffectModifier[] BuildModifiers()
+        {
+            var table = new EffectModifier[modifierCards.Length];
+
+            for (int i = 0; i < modifierCards.Length; i++)
+            {
+                ModifierCardSettings card = modifierCards[i];
+                table[i] = new EffectModifier(
+                    (ushort)card.effectId,
+                    card.target,
+                    card.multiplier,
+                    card.targetsOpponent);
+            }
+
+            return table;
         }
 
         /// <summary>
@@ -180,6 +209,75 @@ namespace PongRoyale.Gameplay.Balance
 
             [Tooltip("Segundos finais com elixir em ritmo dobrado.")]
             [Min(0f)] public float finalStretchSeconds = 60f;
+        }
+
+        /// <summary>
+        /// Conjunto v1 do CARD_SYSTEM.md. Sao os valores iniciais do asset; a partir daqui
+        /// o balanceamento acontece no Inspector, sem recompilar.
+        /// </summary>
+        private static ModifierCardSettings[] DefaultModifierCards() => new[]
+        {
+            new ModifierCardSettings
+            {
+                name = "Fundacao Rachada",
+                effectId = 1,
+                target = ModifierTarget.GuardTowerDamageTaken,
+                multiplier = 2f,
+                targetsOpponent = true
+            },
+            new ModifierCardSettings
+            {
+                name = "Coroa Exposta",
+                effectId = 2,
+                target = ModifierTarget.KingTowerDamageTaken,
+                multiplier = 1.6f,
+                targetsOpponent = true
+            },
+            new ModifierCardSettings
+            {
+                name = "Coice",
+                effectId = 3,
+                target = ModifierTarget.PaddleSweepCarry,
+                // 0.35 base x 2.857 = 1.0, ou seja transferencia total.
+                multiplier = 2.857f,
+                targetsOpponent = false
+            },
+            new ModifierCardSettings
+            {
+                name = "Precisao",
+                effectId = 4,
+                target = ModifierTarget.PaddleMaxDeflection,
+                // 60 graus x 0.5 = 30 graus.
+                multiplier = 0.5f,
+                targetsOpponent = false
+            },
+            new ModifierCardSettings
+            {
+                name = "Lodo",
+                effectId = 5,
+                target = ModifierTarget.PaddleMaxSpeed,
+                multiplier = 0.75f,
+                targetsOpponent = true
+            }
+        };
+
+        [Serializable]
+        private sealed class ModifierCardSettings
+        {
+            [Tooltip("Nome so para leitura no Inspector. A simulacao usa o identificador.")]
+            public string name;
+
+            [Tooltip("Identificador ESTAVEL da carta. E ele que trafega na rede; nunca " +
+                     "reaproveite um numero de carta removida.")]
+            [Min(1)] public int effectId = 1;
+
+            public ModifierTarget target = ModifierTarget.None;
+
+            [Min(0f)] public float multiplier = 1f;
+
+            [Tooltip("Marque quando o alvo e o ADVERSARIO de quem coletou. Coice acelera a " +
+                     "propria raquete (desmarcado); Lodo desacelera a dele (marcado).")]
+            public bool targetsOpponent;
         }
 
         [Serializable]

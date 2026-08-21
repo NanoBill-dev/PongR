@@ -236,10 +236,24 @@ namespace PongRoyale.Core.Simulation
         /// </summary>
         public readonly float CombinedDurationSeconds;
 
-        public EffectConfig(float defaultDurationSeconds, float combinedDurationSeconds)
+        /// <summary>
+        /// Tabela das cartas que sao apenas multiplicadores. Cada entrada e uma carta
+        /// inteira, sem codigo dedicado.
+        ///
+        /// E um array por ser lido a cada consulta e nunca escrito. Tratar como imutavel:
+        /// alterar o conteudo depois de montar o MatchConfig quebraria a garantia de que a
+        /// regra nao muda no meio da partida.
+        /// </summary>
+        public readonly Effects.EffectModifier[] Modifiers;
+
+        public EffectConfig(
+            float defaultDurationSeconds,
+            float combinedDurationSeconds,
+            Effects.EffectModifier[] modifiers)
         {
             DefaultDurationSeconds = defaultDurationSeconds;
             CombinedDurationSeconds = combinedDurationSeconds;
+            Modifiers = modifiers ?? System.Array.Empty<Effects.EffectModifier>();
         }
     }
 

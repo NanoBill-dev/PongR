@@ -35,7 +35,10 @@ pelo sistema de power-ups. Especificacao completa em GAME_DESIGN.md.
 - [ ] Combinacao de dois ataques (3,5 s)
 - [ ] Redencao e modo berserk
 - [ ] Selecao de deck de 3 antes da partida
-- [ ] Efeitos concretos das cartas
+- [x] Camada de modificadores: 5 cartas como dado puro (Fundacao Rachada, Coroa
+      Exposta, Coice, Precisao, Lodo)
+- [ ] Bloqueio A: composicao de velocidade, antes de Chumbo e Turbina
+- [ ] Espectro e demais cartas com logica propria
 
 **Pronto quando:** partida completa com power-ups, jogavel e divertida contra o bot.
 

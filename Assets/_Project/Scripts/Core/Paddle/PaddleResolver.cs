@@ -35,11 +35,17 @@ namespace PongRoyale.Core.Paddle
         {
             for (int i = 0; i < state.Paddles.Length; i++)
             {
-                AdvancePaddle(ref state.Paddles[i], state.Config, deltaTime);
+                var slot = (PlayerSlot)i;
+                AdvancePaddle(
+                    ref state.Paddles[i],
+                    state.Config,
+                    Effects.MatchModifiers.PaddleMaxSpeed(state, slot),
+                    deltaTime);
             }
         }
 
-        private static void AdvancePaddle(ref PaddleState paddle, MatchConfig config, float deltaTime)
+        private static void AdvancePaddle(
+            ref PaddleState paddle, MatchConfig config, float maxSpeed, float deltaTime)
         {
             paddle.PreviousPositionX = paddle.PositionX;
 
@@ -59,7 +65,7 @@ namespace PongRoyale.Core.Paddle
                 : 1f - (float)Math.Exp(-deltaTime / config.Paddle.SmoothingTime);
 
             float step = (target - paddle.PositionX) * blend;
-            float maxStep = config.Paddle.MaxSpeed * deltaTime;
+            float maxStep = maxSpeed * deltaTime;
             step = Math.Clamp(step, -maxStep, maxStep);
 
             float next = ClampToArena(paddle.PositionX + step, config);

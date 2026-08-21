@@ -168,10 +168,10 @@ namespace PongRoyale.Core.Ball
             Vector2 direction,
             float speed,
             float paddleVelocityX,
+            float sweepCarry,
             MatchConfig config)
         {
-            Vector2 outgoing = direction * speed
-                               + new Vector2(paddleVelocityX * config.Paddle.SweepCarry, 0f);
+            Vector2 outgoing = direction * speed + new Vector2(paddleVelocityX * sweepCarry, 0f);
 
             float resultingSpeed = outgoing.Length();
 
@@ -388,6 +388,7 @@ namespace PongRoyale.Core.Ball
                     CollisionMath.Reflect(ball.Direction, hit.Normal),
                     ball.BaseSpeed,
                     paddleVelocityX,
+                    Effects.MatchModifiers.PaddleSweepCarry(state, slot),
                     state.Config);
 
                 ball.CollisionSequence++;
@@ -401,16 +402,25 @@ namespace PongRoyale.Core.Ball
                 hit.SurfaceX,
                 state.Config.Paddle.HalfWidth);
 
+            // PRECISAO fecha o leque de angulos desta raquete. Nao ha codigo da carta aqui:
+            // ela e uma linha na tabela de modificadores.
             Vector2 deflection = CollisionMath.PaddleDeflection(
                 offset,
-                state.Config.Ball.MaxDeflectionFromNormalDegrees,
+                Effects.MatchModifiers.PaddleMaxDeflectionDegrees(state, slot),
                 inwardSign);
 
             float gainedSpeed = Math.Min(
                 ball.BaseSpeed * (1f + state.Config.Ball.SpeedGainPerHit),
                 state.Config.Ball.MaxSpeed);
 
-            ApplyOutgoingVelocity(ref ball, deflection, gainedSpeed, paddleVelocityX, state.Config);
+            // COICE aumenta o quanto a varredura empurra a bola. Tambem so dado.
+            ApplyOutgoingVelocity(
+                ref ball,
+                deflection,
+                gainedSpeed,
+                paddleVelocityX,
+                Effects.MatchModifiers.PaddleSweepCarry(state, slot),
+                state.Config);
 
             ball.LastHitByPlayer = (sbyte)slot;
             ball.CollisionSequence++;
@@ -441,7 +451,12 @@ namespace PongRoyale.Core.Ball
                 return;
             }
 
-            float effectiveDamage = ball.Damage * TowerDamageMultiplier(ball.ConsecutiveTowerHits, state.Config);
+            // FUNDACAO RACHADA e COROA EXPOSTA entram aqui, e tambem por dado: multiplicam
+            // o dano que aquele TIPO de torre recebe. O decaimento por acertos consecutivos
+            // continua valendo por cima, entao nenhuma carta desliga aquela protecao.
+            float effectiveDamage = ball.Damage
+                                    * TowerDamageMultiplier(ball.ConsecutiveTowerHits, state.Config)
+                                    * Effects.MatchModifiers.TowerDamageTaken(state, owner, tower.Kind);
 
             if (ball.ConsecutiveTowerHits < byte.MaxValue)
             {

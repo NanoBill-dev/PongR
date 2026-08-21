@@ -1,4 +1,5 @@
 using System.Numerics;
+using PongRoyale.Core.Effects;
 using PongRoyale.Core.Simulation;
 
 namespace PongRoyale.Tests.EditMode
@@ -11,6 +12,30 @@ namespace PongRoyale.Tests.EditMode
     /// </summary>
     public static class TestConfigs
     {
+        /// <summary>
+        /// Identificadores das cartas-multiplicador usadas nos testes. Numeros literais
+        /// aqui, e nao constantes do Core, porque carta e DADO: o Core nao pode conhecer
+        /// nenhuma delas pelo nome.
+        /// </summary>
+        public static class TestCards
+        {
+            public const ushort FundacaoRachada = 1;
+            public const ushort CoroaExposta = 2;
+            public const ushort Coice = 3;
+            public const ushort Precisao = 4;
+            public const ushort Lodo = 5;
+        }
+
+        /// <summary>Tabela equivalente a do asset de balanceamento, para os testes.</summary>
+        public static EffectModifier[] DefaultModifiers() => new[]
+        {
+            new EffectModifier(TestCards.FundacaoRachada, ModifierTarget.GuardTowerDamageTaken, 2f, true),
+            new EffectModifier(TestCards.CoroaExposta, ModifierTarget.KingTowerDamageTaken, 1.6f, true),
+            new EffectModifier(TestCards.Coice, ModifierTarget.PaddleSweepCarry, 2.857f, false),
+            new EffectModifier(TestCards.Precisao, ModifierTarget.PaddleMaxDeflection, 0.5f, false),
+            new EffectModifier(TestCards.Lodo, ModifierTarget.PaddleMaxSpeed, 0.75f, true)
+        };
+
         public static MatchConfig Default()
         {
             return new MatchConfig(
@@ -48,7 +73,8 @@ namespace PongRoyale.Tests.EditMode
                     finalStretchSeconds: 60f),
                 new EffectConfig(
                     defaultDurationSeconds: 6f,
-                    combinedDurationSeconds: 3.5f),
+                    combinedDurationSeconds: 3.5f,
+                    modifiers: DefaultModifiers()),
                 new TrophyConfig(onWin: 30, onLoss: -25, onDraw: 0));
         }
     }
