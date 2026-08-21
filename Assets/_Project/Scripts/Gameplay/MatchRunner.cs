@@ -20,6 +20,16 @@ namespace PongRoyale.Gameplay
         [SerializeField] private PlayerSlot firstServeToward = PlayerSlot.Bottom;
         [SerializeField] private bool beginOnStart = true;
 
+        [Header("Deck (provisorio ate a selecao do passo 6)")]
+        [Tooltip("Carta na torre lateral ESQUERDA do adversario. Zero desliga o drop.")]
+        [SerializeField, Min(0)] private int bottomLeftCard = 1;
+
+        [Tooltip("Carta na torre lateral DIREITA do adversario.")]
+        [SerializeField, Min(0)] private int bottomRightCard = 3;
+
+        [SerializeField, Min(0)] private int topLeftCard = 4;
+        [SerializeField, Min(0)] private int topRightCard = 5;
+
         [Header("Loop")]
         [Tooltip("Teto de ticks por frame. Impede a espiral da morte quando um travamento " +
                  "acumula tempo demais e cada frame passa a simular mais do que consegue.")]
@@ -45,7 +55,14 @@ namespace PongRoyale.Gameplay
             }
 
             Config = balanceData.ToMatchConfig();
-            Simulation = new MatchSimulation(Config, firstServeToward);
+
+            var loadout = new MatchLoadout(
+                (ushort)bottomLeftCard,
+                (ushort)bottomRightCard,
+                (ushort)topLeftCard,
+                (ushort)topRightCard);
+
+            Simulation = new MatchSimulation(Config, firstServeToward, loadout);
             Commands = new MatchCommandBuffer();
         }
 

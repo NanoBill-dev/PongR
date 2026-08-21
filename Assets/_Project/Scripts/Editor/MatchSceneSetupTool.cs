@@ -6,6 +6,7 @@ using PongRoyale.Gameplay.Balance;
 using PongRoyale.Gameplay.Input;
 using PongRoyale.Gameplay.Ball;
 using PongRoyale.Gameplay.Paddle;
+using PongRoyale.Gameplay.Pickups;
 using PongRoyale.Gameplay.Towers;
 using PongRoyale.Presentation.CameraRig;
 using PongRoyale.Presentation.Hud;
@@ -77,12 +78,13 @@ namespace PongRoyale.Editor
             // A partir daqui nao ha mais importacao de asset, entao as referencias carregadas
             // agora sobrevivem ate o fim da montagem.
             var square = AssetDatabase.LoadAssetAtPath<Sprite>(squarePath);
+            var circle = AssetDatabase.LoadAssetAtPath<Sprite>(circlePath);
             var balance = AssetDatabase.LoadAssetAtPath<BalanceData>(BalanceAssetPath);
             var ballPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(BallPrefabPath);
             var paddlePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PaddlePrefabPath);
             var towerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(TowerPrefabPath);
 
-            if (square == null || balance == null || ballPrefab == null
+            if (square == null || circle == null || balance == null || ballPrefab == null
                 || paddlePrefab == null || towerPrefab == null)
             {
                 Debug.LogError("[MatchScene] Falha ao carregar os assets necessarios. " +
@@ -99,6 +101,7 @@ namespace PongRoyale.Editor
             CreateTowers(towerPrefab, runner);
             CreateBall(ballPrefab, runner);
             CreateInput(runner, camera);
+            CreatePickups(circle, runner);
             CreateHud(runner, square, config);
 
             // A ferramenta valida o proprio resultado. Uma referencia perdida aqui nao
@@ -121,6 +124,93 @@ namespace PongRoyale.Editor
         private const int HudFillSortingOrder = 91;
         private const int HudTextSortingOrder = 100;
         private const int DamageNumberCount = 12;
+        private const int PickupSortingOrder = 25;
+
+        /// <summary>
+        /// Uma view por vaga de drop, criadas desde ja e desligadas. Nada de Instantiate no
+        /// meio da partida. A cor de cada uma sai de quem vai coletar, entao o jogador ve
+        /// num relance se o premio que esta caindo e dele.
+        /// </summary>
+        private static void CreatePickups(Sprite circle, MatchRunner runner)
+        {
+            var root = new GameObject("Pickups");
+
+            for (int i = 0; i < MatchState.MaxPickups; i++)
+            {
+                GameObject instance = CreateSpriteObject(
+                    "Pickup_" + i, circle, Color.white, PickupSortingOrder,
+                    Vector3.zero, Vector3.one, root.transform);
+
+                var view = instance.AddComponent<PickupView>();
+                var serialized = new SerializedObject(view);
+                serialized.FindProperty("runner").objectReferenceValue = runner;
+                serialized.FindProperty("pickupIndex").intValue = i;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+
+        /// <summary>
+        /// Barra de ciclo na divisao dos lados, com os indicadores de carga dos DOIS
+        /// jogadores. Uma barra so, porque o metronomo e global.
+        /// </summary>
+        private static void CreateElixirBar(Transform parent, MatchRunner runner, Sprite square)
+        {
+            const float BarWidth = 8f;
+            const float BarHeight = 0.18f;
+            const float ChargeSize = 0.34f;
+            const float ChargeSpacing = 0.5f;
+            const float ChargeOffsetY = 0.45f;
+
+            var host = new GameObject("ElixirCycle");
+            host.transform.SetParent(parent, worldPositionStays: false);
+
+            CreateSpriteObject(
+                "BarBackground", square, new Color(0.08f, 0.09f, 0.13f, 0.85f), HudBackgroundSortingOrder,
+                Vector3.zero, new Vector3(BarWidth, BarHeight, 1f), host.transform);
+
+            GameObject fill = CreateSpriteObject(
+                "BarFill", square, new Color(0.55f, 0.85f, 1f, 1f), HudFillSortingOrder,
+                Vector3.zero, new Vector3(0f, BarHeight, 1f), host.transform);
+
+            var bottomCharges = new SpriteRenderer[3];
+            var topCharges = new SpriteRenderer[3];
+
+            for (int i = 0; i < 3; i++)
+            {
+                float x = (i - 1) * ChargeSpacing;
+
+                bottomCharges[i] = CreateSpriteObject(
+                    "ChargeBottom_" + i, square, Color.gray, HudFillSortingOrder,
+                    new Vector3(x, -ChargeOffsetY, 0f), new Vector3(ChargeSize, ChargeSize, 1f),
+                    host.transform).GetComponent<SpriteRenderer>();
+
+                topCharges[i] = CreateSpriteObject(
+                    "ChargeTop_" + i, square, Color.gray, HudFillSortingOrder,
+                    new Vector3(x, ChargeOffsetY, 0f), new Vector3(ChargeSize, ChargeSize, 1f),
+                    host.transform).GetComponent<SpriteRenderer>();
+            }
+
+            var view = host.AddComponent<ElixirCycleView>();
+            var serialized = new SerializedObject(view);
+            serialized.FindProperty("runner").objectReferenceValue = runner;
+            serialized.FindProperty("barFill").objectReferenceValue = fill.transform;
+            serialized.FindProperty("barWidth").floatValue = BarWidth;
+            serialized.FindProperty("barHeight").floatValue = BarHeight;
+
+            AssignRenderers(serialized.FindProperty("bottomCharges"), bottomCharges);
+            AssignRenderers(serialized.FindProperty("topCharges"), topCharges);
+
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void AssignRenderers(SerializedProperty array, SpriteRenderer[] renderers)
+        {
+            array.arraySize = renderers.Length;
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                array.GetArrayElementAtIndex(i).objectReferenceValue = renderers[i];
+            }
+        }
 
         /// <summary>
         /// Monta a HUD: vida das torres, numeros de dano, relogio e painel de resultado.
@@ -152,6 +242,7 @@ namespace PongRoyale.Editor
             CreateClock(root.transform, runner, font, config);
             CreateResultPanel(root.transform, runner, square, font, config);
             CreateDamageNumbers(root.transform, runner, font);
+            CreateElixirBar(root.transform, runner, square);
         }
 
         private static void CreateTowerHealth(

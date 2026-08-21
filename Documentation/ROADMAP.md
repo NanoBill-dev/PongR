@@ -31,8 +31,8 @@ pelo sistema de power-ups. Especificacao completa em GAME_DESIGN.md.
 - [x] Dano decrescente em acertos consecutivos de torre
 - [x] Camada de efeitos com duracao (base comum de todo power-up)
 - [x] Ciclo de elixir e cargas de defesa (metronomo global, contagem inteira)
-- [x] Drop fisico: queda, coleta pela raquete, interceptacao unica (simulacao;
-      falta a parte visual)
+- [x] Drop fisico: queda, coleta pela raquete, interceptacao unica
+- [x] Visual do drop e barra de ciclo com cargas dos dois jogadores
 - [ ] Combinacao de dois ataques (3,5 s)
 - [ ] Redencao e modo berserk
 - [ ] Selecao de deck de 3 antes da partida
