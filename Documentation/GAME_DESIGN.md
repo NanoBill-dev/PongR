@@ -108,13 +108,17 @@ A ordem das cartas E a atribuicao:
 | 2 | Defesa | Ciclo de elixir (nunca em torre) |
 | 3 | Ataque | Torre lateral DIREITA do adversario |
 
-Cartas de defesa so podem ocupar o slot 2. Cartas de ataque so podem ocupar 1 e 3.
+Cartas de ataque so podem ocupar os slots 1 e 3.
 
-**Decisao pendente:** padronizar a carta de defesa para todos os jogadores (anular um
-acerto em qualquer torre), removendo a escolha do slot 2. Recomendado para o MVP — deixa
-toda a decisao no ataque, concentra o segredo na atribuicao e tira do caminho o eixo mais
-dificil de balancear. A estrutura do slot 2 permanece, entao liberar variedade defensiva
-depois e acrescentar opcoes, nao redesenhar.
+**O slot 2 e PADRONIZADO: nao ha escolha de defesa.** Todo jogador entra com a mesma carta
+defensiva, que anula um acerto em qualquer torre e acumula ate 3 cargas.
+
+**Por que padronizar:** concentra toda a decisao e todo o segredo no ataque, e tira do MVP
+o eixo mais dificil de balancear — cartas defensivas sao as que mais produzem partidas
+travadas. A estrutura do slot 2 permanece, entao liberar variedade defensiva depois e
+acrescentar opcoes, nao redesenhar.
+
+Na pratica o jogador escolhe **2 cartas**: qual ataque na esquerda, qual na direita.
 
 ### 5.2 Informacao assimetrica
 
@@ -149,6 +153,10 @@ Ele atravessa a arena inteira, passando pela raquete do adversario
 livre. Isso obriga a decidir sob pressao, sem saber o que esta caindo, e impede que um
 jogador experiente zere a economia ofensiva do adversario.
 
+**O drop de REDENCAO nao pode ser interceptado**, mesmo que o adversario ainda tenha a
+interceptacao disponivel. A redencao foi comprada com 60 segundos de defesa impecavel e ja
+custou as tres cargas; deixar que fosse roubada puniria duas vezes o mesmo jogador.
+
 **O contrapeso que faz o sistema funcionar:** pegar o drop exige a raquete, que e a mesma
 que esta defendendo. Destruir a torre nao da o premio; da uma ESCOLHA entre buscar o
 power-up e manter a defesa. E o mesmo recurso disputado por dois objetivos.
@@ -171,12 +179,25 @@ A carta de defesa NAO participa da combinacao. Ela e passiva com cargas, sem tem
 
 O elixir nao e moeda. E o motor da defesa e da redencao.
 
-- Ciclo de 0 a 10, aproximadamente 20 s.
-- Cada ciclo completo: +1 carga de defesa, maximo 3.
+**A barra e um METRONOMO GLOBAL, nao um cronometro por jogador.** Um relogio unico, que
+comeca junto e bate igual para os dois. O que difere e quem RECEBE a carga naquela batida.
+
+- Ciclo de aproximadamente 20 s, compartilhado.
+- A cada batida: +1 carga de defesa para cada jogador ativo, maximo 3.
 - Cada carga anula UM acerto em qualquer torre e some.
 - Gastar carga nao impede continuar acumulando ate 3.
+- Jogador em modo berserk simplesmente nao recebe carga; a barra segue girando.
 
-**Cargas limpas** sao cargas acumuladas sem ter gasto nenhuma. E o que a redencao exige.
+**Consequencia deliberada:** perder uma carga faltando pouco para a batida devolve ela
+quase de graca; perder logo depois deixa o jogador 20 s exposto. E sorte real, e nao
+injusta, porque ninguem escolhe quando toma o acerto.
+
+**Ciclos limpos** e um contador separado das cargas: sobe a cada batida recebida e ZERA
+sempre que uma carga e gasta. Chegar a 3 ciclos limpos significa 60 s sem tomar um acerto
+sequer, e e o que a redencao exige.
+
+A sorte da batida ajuda a DEFESA, nunca a redencao: recuperar a carga rapido devolve o
+escudo, nao o progresso. Do contrario, tomar acerto na hora certa sairia quase de graca.
 
 ---
 
@@ -201,21 +222,20 @@ os tres diamantes apagam no instante em que o drop reaparece.
 
 **Estados do elixir:**
 
-| Situacao | Elixir |
+A barra global nunca para. O que muda e se o jogador RECEBE a carga da batida:
+
+| Situacao do jogador | Recebe carga? |
 |---|---|
-| Acumulando cargas | girando |
-| 3 cargas limpas, nada perdido pendente | ocioso; volta a girar ao gastar uma carga |
-| 3 cargas limpas, perda foi por INTERCEPTACAO | ocioso; nao ha redencao para esse drop |
-| Redencao disparou e o drop foi COLETADO | parado ate o fim da partida |
-| Redencao disparou e o drop foi PERDIDO | volta a girar, mas sem nova redencao |
+| Acumulando | sim |
+| 3 cargas limpas, nada perdido pendente | ja esta no teto; volta a receber ao gastar |
+| 3 cargas limpas, perda foi por INTERCEPTACAO | idem; nao ha redencao para esse drop |
+| Redencao disparou e o drop foi COLETADO | NAO, ate o fim da partida (berserk) |
+| Redencao disparou e o drop foi PERDIDO | sim, volta a receber; sem nova redencao |
 
 A ultima linha e o contrapeso: recebeu o premio, paga o preco integral; nao recebeu, nao e
 punido duas vezes — recupera a geracao de defesa, so nao tem segunda chance no ataque.
 
-**A redencao acontece no maximo uma vez por partida.**
-
-**Suposicao a confirmar:** um drop de redencao INTERCEPTADO conta como "perdido" para
-efeito de religar o elixir. E o tratamento coerente — voce nao ficou com o item.
+**A redencao acontece no maximo uma vez por partida**, em qualquer cenario.
 
 ---
 
@@ -239,13 +259,11 @@ efeito de religar o elixir. E o tratamento coerente — voce nao ficou com o ite
 - Vida de cada torre com numero e barra, ancorada no mundo acima dela.
 - Numero de dano flutuante no impacto, mostrando o valor REALMENTE aplicado.
 - Relogio da partida acima da arena.
-- Barra de ciclo de elixir na divisao dos lados, com indicadores de carga dos DOIS
-  jogadores. Ver as cargas do adversario muda como voce ataca.
-
-**Decisao pendente:** a barra e uma so no centro, mas os ciclos DIVERGEM quando um jogador
-atinge a redencao. Duas saidas: encher do centro para fora (metade de cada) ou mostrar
-apenas o SEU ciclo, lendo o do adversario pelos diamantes dele. Recomendado o segundo, por
-ser mais limpo.
+- Barra de ciclo na divisao dos lados: UMA barra, compartilhada, porque o metronomo e
+  global. Nao ha divergencia possivel entre os dois jogadores.
+- Indicadores de carga dos DOIS jogadores, um conjunto de cada lado da barra. Ver as cargas
+  do adversario muda como voce ataca — e ver as tres dele acesas avisa que ele esta a um
+  passo da redencao.
 
 ---
 
@@ -264,8 +282,8 @@ ser mais limpo.
 ## 10. Em aberto
 
 - Efeitos concretos de cada power-up (em amadurecimento).
-- Padronizar ou nao a carta de defesa.
-- Duracao da partida: 120 s e provisorio.
+- Duracao da partida: 120 s e provisorio, a validar jogando.
 - Velocidade de queda do drop.
-- Reclassificar as 8 cartas da secao 17 do prompt mestre em ataque e defesa, e definir o
-  tamanho do repositorio para a escolha de 3 ser interessante.
+- Repositorio de cartas de ATAQUE: quantas existem e quais, para a escolha de 2 ser
+  interessante. As cartas defensivas da secao 17 do prompt mestre (Escudo, Muro,
+  Congelamento) ficam sem uso enquanto a defesa for padronizada.
