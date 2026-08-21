@@ -92,15 +92,9 @@ namespace PongRoyale.Tests.EditMode
         public void TwoModifiersOnTheSameTargetMultiplyTogether()
         {
             // Importa para a combinacao: dois efeitos ativos compoem, nao competem.
-            var config = TestConfigs.Default();
-            var doubled = new MatchConfig(
-                config.Arena, config.Ball, config.Paddle, config.Tower, config.Elixir, config.Rules,
-                new EffectConfig(6f, 3.5f, new[]
-                {
-                    new EffectModifier(10, ModifierTarget.GuardTowerDamageTaken, 2f, true),
-                    new EffectModifier(11, ModifierTarget.GuardTowerDamageTaken, 1.5f, true)
-                }),
-                config.Trophies);
+            MatchConfig doubled = TestConfigs.WithModifiers(
+                new EffectModifier(10, ModifierTarget.GuardTowerDamageTaken, 2f, true),
+                new EffectModifier(11, ModifierTarget.GuardTowerDamageTaken, 1.5f, true));
 
             state = MatchStateFactory.CreateInitial(doubled, PlayerSlot.Bottom);
 
@@ -277,14 +271,8 @@ namespace PongRoyale.Tests.EditMode
         public void BallEffectsNeedPossessionToApply()
         {
             // Logo apos o saque a bola nao tem dono, entao nenhum efeito de posse vale.
-            var config = TestConfigs.Default();
-            var withBallCard = new MatchConfig(
-                config.Arena, config.Ball, config.Paddle, config.Tower, config.Elixir, config.Rules,
-                new EffectConfig(6f, 3.5f, new[]
-                {
-                    new EffectModifier(20, ModifierTarget.BallSpeed, 1.4f, false)
-                }),
-                config.Trophies);
+            MatchConfig withBallCard = TestConfigs.WithModifiers(
+                new EffectModifier(20, ModifierTarget.BallSpeed, 1.4f, false));
 
             state = MatchStateFactory.CreateInitial(withBallCard, PlayerSlot.Bottom);
             EffectResolver.Grant(state, PlayerSlot.Bottom, 20, 6f, events);

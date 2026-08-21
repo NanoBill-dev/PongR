@@ -257,6 +257,22 @@ namespace PongRoyale.Core.Simulation
         }
     }
 
+    /// <summary>O power-up caindo pela arena.</summary>
+    public readonly struct PickupConfig
+    {
+        /// <summary>Velocidade de queda em unidades por segundo.</summary>
+        public readonly float FallSpeed;
+
+        /// <summary>Raio de coleta, somado a meia-largura da raquete.</summary>
+        public readonly float Radius;
+
+        public PickupConfig(float fallSpeed, float radius)
+        {
+            FallSpeed = fallSpeed;
+            Radius = radius;
+        }
+    }
+
     /// <summary>Trofeus ganhos ou perdidos ao fim da partida.</summary>
     public readonly struct TrophyConfig
     {
@@ -286,6 +302,7 @@ namespace PongRoyale.Core.Simulation
         public readonly ElixirConfig Elixir;
         public readonly MatchRulesConfig Rules;
         public readonly EffectConfig Effects;
+        public readonly PickupConfig Pickup;
         public readonly TrophyConfig Trophies;
 
         public MatchConfig(
@@ -296,6 +313,7 @@ namespace PongRoyale.Core.Simulation
             ElixirConfig elixir,
             MatchRulesConfig rules,
             EffectConfig effects,
+            PickupConfig pickup,
             TrophyConfig trophies)
         {
             Arena = arena;
@@ -305,6 +323,7 @@ namespace PongRoyale.Core.Simulation
             Elixir = elixir;
             Rules = rules;
             Effects = effects;
+            Pickup = pickup;
             Trophies = trophies;
         }
     }

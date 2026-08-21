@@ -15,12 +15,16 @@ namespace PongRoyale.Core.Simulation
     /// </summary>
     public static class MatchStateFactory
     {
-        public static MatchState CreateInitial(MatchConfig config, PlayerSlot serveToward)
+        public static MatchState CreateInitial(MatchConfig config, PlayerSlot serveToward) =>
+            CreateInitial(config, serveToward, MatchLoadout.Empty);
+
+        public static MatchState CreateInitial(
+            MatchConfig config, PlayerSlot serveToward, MatchLoadout loadout)
         {
             var state = new MatchState(config);
 
             CreatePaddles(state, config);
-            CreateTowers(state, config);
+            CreateTowers(state, config, loadout);
             CreatePlayers(state);
             SpawnInitialBall(state, config, serveToward);
 
@@ -38,14 +42,18 @@ namespace PongRoyale.Core.Simulation
                 PaddleState.Create(PlayerSlot.Top.DirectionSign() * lineDistanceFromCenter);
         }
 
-        private static void CreateTowers(MatchState state, MatchConfig config)
+        private static void CreateTowers(MatchState state, MatchConfig config, MatchLoadout loadout)
         {
-            CreateTowerRow(state, config, PlayerSlot.Bottom);
-            CreateTowerRow(state, config, PlayerSlot.Top);
+            CreateTowerRow(state, config, PlayerSlot.Bottom, loadout);
+            CreateTowerRow(state, config, PlayerSlot.Top, loadout);
         }
 
-        private static void CreateTowerRow(MatchState state, MatchConfig config, PlayerSlot slot)
+        private static void CreateTowerRow(
+            MatchState state, MatchConfig config, PlayerSlot slot, MatchLoadout loadout)
         {
+            // A carta que cai desta torre foi escolhida pelo ADVERSARIO do dono dela, e e
+            // para ele que o drop cai. Quem derruba a lateral inimiga recebe o proprio premio.
+            PlayerSlot chooser = slot.Opponent();
             TowerConfig towers = config.Tower;
             float rowY = slot.DirectionSign() * (config.Arena.HalfHeight - towers.RowOffsetFromEdge);
             byte owner = (byte)slot;
@@ -65,6 +73,8 @@ namespace PongRoyale.Core.Simulation
                 towers.GuardHalfSize.Y,
                 TowerKind.LeftGuard,
                 owner);
+            state.Towers[MatchState.TowerIndex(slot, TowerKind.LeftGuard)].RewardEffectId =
+                loadout.LeftCardOf(chooser);
 
             state.Towers[MatchState.TowerIndex(slot, TowerKind.RightGuard)] = TowerState.Create(
                 new Vector2(towers.GuardOffsetFromCenter, rowY),
@@ -73,6 +83,8 @@ namespace PongRoyale.Core.Simulation
                 towers.GuardHalfSize.Y,
                 TowerKind.RightGuard,
                 owner);
+            state.Towers[MatchState.TowerIndex(slot, TowerKind.RightGuard)].RewardEffectId =
+                loadout.RightCardOf(chooser);
         }
 
         private static void CreatePlayers(MatchState state)

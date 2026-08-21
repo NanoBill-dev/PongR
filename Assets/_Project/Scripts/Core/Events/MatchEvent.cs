@@ -23,7 +23,11 @@ namespace PongRoyale.Core.Events
         EffectExpired = 11,
         ElixirCycleCompleted = 12,
         DefenseChargeGained = 13,
-        DefenseChargeConsumed = 14
+        DefenseChargeConsumed = 14,
+        PickupSpawned = 15,
+        PickupCollected = 16,
+        PickupIntercepted = 17,
+        PickupLost = 18
     }
 
     /// <summary>
@@ -99,6 +103,22 @@ namespace PongRoyale.Core.Events
 
         public static MatchEvent DefenseChargeConsumed(int tick, PlayerSlot slot, int charges) =>
             new MatchEvent(MatchEventType.DefenseChargeConsumed, tick, slot, 0, charges, Vector2.Zero);
+
+        /// <summary>
+        /// Eventos do drop. O slot e sempre o COLETOR previsto, mesmo na interceptacao —
+        /// assim a apresentacao sabe de quem era o premio que acabou de ser roubado.
+        /// </summary>
+        public static MatchEvent PickupSpawned(int tick, PlayerSlot collector, ushort effectId, Vector2 at) =>
+            new MatchEvent(MatchEventType.PickupSpawned, tick, collector, 0, effectId, at);
+
+        public static MatchEvent PickupCollected(int tick, PlayerSlot collector, ushort effectId, Vector2 at) =>
+            new MatchEvent(MatchEventType.PickupCollected, tick, collector, 0, effectId, at);
+
+        public static MatchEvent PickupIntercepted(int tick, PlayerSlot thief, ushort effectId, Vector2 at) =>
+            new MatchEvent(MatchEventType.PickupIntercepted, tick, thief, 0, effectId, at);
+
+        public static MatchEvent PickupLost(int tick, PlayerSlot collector, ushort effectId, Vector2 at) =>
+            new MatchEvent(MatchEventType.PickupLost, tick, collector, 0, effectId, at);
 
         public static MatchEvent MatchEnded(int tick, MatchOutcome outcome) =>
             new MatchEvent(MatchEventType.MatchEnded, tick, PlayerSlot.Bottom, (byte)outcome, 0f, Vector2.Zero);

@@ -26,6 +26,13 @@ namespace PongRoyale.Core.Simulation
         /// </summary>
         public bool ReceivesCharges;
 
+        /// <summary>
+        /// Interceptacao ainda disponivel. UMA por partida: gastou, o proximo drop do
+        /// adversario passa livre. Isso obriga a decidir sob pressao, sem saber o que esta
+        /// caindo, e impede que um veterano zere a economia ofensiva do outro lado.
+        /// </summary>
+        public bool HasInterceptionAvailable;
+
         /// <summary>Torres adversarias derrubadas. Alimenta missoes e estatisticas.</summary>
         public byte TowersDestroyed;
 
@@ -36,6 +43,7 @@ namespace PongRoyale.Core.Simulation
                 DefenseCharges = 0,
                 CleanCycles = 0,
                 ReceivesCharges = true,
+                HasInterceptionAvailable = true,
                 TowersDestroyed = 0
             };
         }

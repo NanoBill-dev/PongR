@@ -36,7 +36,16 @@ namespace PongRoyale.Tests.EditMode
             new EffectModifier(TestCards.Lodo, ModifierTarget.PaddleMaxSpeed, 0.75f, true)
         };
 
-        public static MatchConfig Default()
+        public static MatchConfig Default() => Build(DefaultModifiers());
+
+        /// <summary>
+        /// Mesma configuracao canonica, com outra tabela de cartas. Existe para que um teste
+        /// de carta NAO precise montar um MatchConfig na mao: toda vez que a configuracao
+        /// ganha um campo novo, quem monta manualmente quebra sem motivo.
+        /// </summary>
+        public static MatchConfig WithModifiers(params EffectModifier[] modifiers) => Build(modifiers);
+
+        private static MatchConfig Build(EffectModifier[] modifiers)
         {
             return new MatchConfig(
                 new ArenaConfig(width: 10f, height: 18f, paddleLineOffsetFromEdge: 2.5f),
@@ -74,7 +83,8 @@ namespace PongRoyale.Tests.EditMode
                 new EffectConfig(
                     defaultDurationSeconds: 6f,
                     combinedDurationSeconds: 3.5f,
-                    modifiers: DefaultModifiers()),
+                    modifiers: modifiers),
+                new PickupConfig(fallSpeed: 5f, radius: 0.35f),
                 new TrophyConfig(onWin: 30, onLoss: -25, onDraw: 0));
         }
     }

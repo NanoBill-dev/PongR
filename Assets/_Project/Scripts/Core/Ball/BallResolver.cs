@@ -472,6 +472,9 @@ namespace PongRoyale.Core.Ball
             {
                 state.GetPlayer(owner.Opponent()).TowersDestroyed++;
                 events.Enqueue(MatchEvent.TowerDestroyed(state.Tick, owner, (byte)hit.Index, impactPosition));
+
+                // A torre lateral solta o power-up que o adversario colocou nela.
+                Pickups.PickupResolver.SpawnFromTower(state, hit.Index, events);
             }
 
             ball.Direction = CollisionMath.EnforceMinAngleFromHorizontal(

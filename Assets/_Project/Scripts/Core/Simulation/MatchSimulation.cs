@@ -30,8 +30,13 @@ namespace PongRoyale.Core.Simulation
     public sealed class MatchSimulation
     {
         public MatchSimulation(MatchConfig config, PlayerSlot firstServeToward)
+            : this(config, firstServeToward, MatchLoadout.Empty)
         {
-            State = MatchStateFactory.CreateInitial(config, firstServeToward);
+        }
+
+        public MatchSimulation(MatchConfig config, PlayerSlot firstServeToward, MatchLoadout loadout)
+        {
+            State = MatchStateFactory.CreateInitial(config, firstServeToward, loadout);
             Events = new MatchEventQueue();
         }
 
@@ -84,6 +89,7 @@ namespace PongRoyale.Core.Simulation
                 // vale por ele inteiro, e um que expira so deixa de valer no proximo.
                 EffectResolver.Advance(State, MatchConstants.FixedDeltaTime, Events);
                 ElixirResolver.Advance(State, Events);
+                Pickups.PickupResolver.Advance(State, MatchConstants.FixedDeltaTime, Events);
 
                 // O relogio e DERIVADO do contador inteiro, nunca acumulado. Somar o passo
                 // fixo milhares de vezes num float faz a partida terminar fora da hora.

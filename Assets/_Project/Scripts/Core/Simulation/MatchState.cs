@@ -32,6 +32,12 @@ namespace PongRoyale.Core.Simulation
         /// </summary>
         public const int MaxEffectsPerPlayer = 4;
 
+        /// <summary>Drops simultaneos: duas torres laterais por lado, mais folga.</summary>
+        public const int MaxPickups = 6;
+
+        /// <summary>Cartas de ataque por jogador, logo o teto de drops perdidos.</summary>
+        public const int MaxLostDropsPerPlayer = 2;
+
         public readonly MatchConfig Config;
 
         public readonly BallState[] Balls = new BallState[MaxBalls];
@@ -44,6 +50,16 @@ namespace PongRoyale.Core.Simulation
         /// </summary>
         public readonly ActiveEffect[] Effects =
             new ActiveEffect[MatchConstants.PlayerCount * MaxEffectsPerPlayer];
+
+        /// <summary>Power-ups caindo pela arena.</summary>
+        public readonly Pickups.PickupState[] Pickups = new Pickups.PickupState[MaxPickups];
+
+        /// <summary>
+        /// Cartas que o jogador deixou passar sem coletar. E a condicao de ataque da
+        /// redencao: drop interceptado NAO entra aqui.
+        /// </summary>
+        public readonly ushort[] LostDrops =
+            new ushort[MatchConstants.PlayerCount * MaxLostDropsPerPlayer];
 
         public int Tick;
         public float ElapsedSeconds;

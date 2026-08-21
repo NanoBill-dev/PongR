@@ -29,6 +29,12 @@ namespace PongRoyale.Core.Combat
         public TowerKind Kind;
         public byte OwnerSlot;
 
+        /// <summary>
+        /// Carta que cai quando esta torre e destruida. Foi escolhida pelo ADVERSARIO do
+        /// dono da torre, e cai em direcao a ele. Zero nas Torres Rei e quando nao ha deck.
+        /// </summary>
+        public ushort RewardEffectId;
+
         public bool IsAlive => Health > 0f;
 
         public bool IsKing => Kind == TowerKind.King;

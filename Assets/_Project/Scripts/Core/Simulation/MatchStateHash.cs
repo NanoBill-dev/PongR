@@ -77,6 +77,25 @@ namespace PongRoyale.Core.Simulation
                 Combine(ref hash, state.Players[i].CleanCycles);
                 Combine(ref hash, state.Players[i].ReceivesCharges ? 1 : 0);
                 Combine(ref hash, state.Players[i].TowersDestroyed);
+                Combine(ref hash, state.Players[i].HasInterceptionAvailable ? 1 : 0);
+            }
+
+            for (int i = 0; i < state.Pickups.Length; i++)
+            {
+                Combine(ref hash, state.Pickups[i].IsActive ? 1 : 0);
+
+                if (state.Pickups[i].IsActive)
+                {
+                    Combine(ref hash, state.Pickups[i].EffectId);
+                    Combine(ref hash, state.Pickups[i].Position.X);
+                    Combine(ref hash, state.Pickups[i].Position.Y);
+                    Combine(ref hash, state.Pickups[i].CollectorSlot);
+                }
+            }
+
+            for (int i = 0; i < state.LostDrops.Length; i++)
+            {
+                Combine(ref hash, state.LostDrops[i]);
             }
 
             for (int i = 0; i < state.Effects.Length; i++)

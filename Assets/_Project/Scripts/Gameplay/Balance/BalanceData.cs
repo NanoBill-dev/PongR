@@ -29,6 +29,7 @@ namespace PongRoyale.Gameplay.Balance
         [Tooltip("Cartas que sao apenas multiplicadores. Cada linha e uma carta inteira, " +
                  "sem codigo dedicado. Cartas com logica propria nao entram aqui.")]
         [SerializeField] private ModifierCardSettings[] modifierCards = DefaultModifierCards();
+        [SerializeField] private PickupSettings pickup = new PickupSettings();
         [SerializeField] private TrophySettings trophies = new TrophySettings();
 
         /// <summary>Converte os dados de autoria no pacote imutavel consumido pela simulacao.</summary>
@@ -69,6 +70,7 @@ namespace PongRoyale.Gameplay.Balance
                     effects.defaultDurationSeconds,
                     effects.combinedDurationSeconds,
                     BuildModifiers()),
+                new PickupConfig(pickup.fallSpeed, pickup.radius),
                 new TrophyConfig(trophies.onWin, trophies.onLoss, trophies.onDraw));
         }
 
@@ -289,6 +291,17 @@ namespace PongRoyale.Gameplay.Balance
             [Tooltip("Duracao de TODOS os efeitos quando dois ou mais estao ativos juntos. " +
                      "Substitui o tempo restante: combinar e sempre uma janela curta e fixa.")]
             [Range(0.5f, 10f)] public float combinedDurationSeconds = 3.5f;
+        }
+
+        [Serializable]
+        private sealed class PickupSettings
+        {
+            [Tooltip("Velocidade de queda do power-up. A travessia da arena inteira leva " +
+                     "cerca de 17 unidades, entao 5 u/s da uns 3,4 segundos de reacao.")]
+            [Min(0.5f)] public float fallSpeed = 5f;
+
+            [Tooltip("Raio de coleta, somado a meia-largura da raquete.")]
+            [Min(0.05f)] public float radius = 0.35f;
         }
 
         [Serializable]
