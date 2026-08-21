@@ -428,6 +428,19 @@ namespace PongRoyale.Core.Ball
             var owner = (PlayerSlot)tower.OwnerSlot;
             Vector2 impactPosition = ball.Position;
 
+            // A carga de defesa anula o acerto por inteiro. Nao mexe no contador de
+            // decaimento de proposito: o decaimento mede dano acumulado, e aqui nao houve
+            // dano nenhum — o proximo acerto que passar deve valer cheio.
+            if (Economy.ElixirResolver.TryAbsorbHit(state, owner, events))
+            {
+                ball.Direction = CollisionMath.EnforceMinAngleFromHorizontal(
+                    CollisionMath.Reflect(ball.Direction, hit.Normal),
+                    state.Config.Ball.MinAngleFromHorizontalDegrees);
+
+                ball.CollisionSequence++;
+                return;
+            }
+
             float effectiveDamage = ball.Damage * TowerDamageMultiplier(ball.ConsecutiveTowerHits, state.Config);
 
             if (ball.ConsecutiveTowerHits < byte.MaxValue)

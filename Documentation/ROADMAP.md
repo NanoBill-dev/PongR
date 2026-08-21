@@ -30,7 +30,7 @@ pelo sistema de power-ups. Especificacao completa em GAME_DESIGN.md.
 - [x] HUD v1: vida das torres com numero, dano flutuante, relogio, painel de resultado
 - [x] Dano decrescente em acertos consecutivos de torre
 - [x] Camada de efeitos com duracao (base comum de todo power-up)
-- [ ] Ciclo de elixir e cargas de defesa
+- [x] Ciclo de elixir e cargas de defesa (metronomo global, contagem inteira)
 - [ ] Drop fisico: queda, coleta pela raquete, interceptacao unica
 - [ ] Combinacao de dois ataques (3,5 s)
 - [ ] Redencao e modo berserk

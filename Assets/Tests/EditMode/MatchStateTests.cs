@@ -113,13 +113,22 @@ namespace PongRoyale.Tests.EditMode
         }
 
         [Test]
-        public void PlayersStartWithTheConfiguredElixir()
+        public void PlayersStartWithoutDefenceAndReceivingCharges()
         {
-            MatchConfig config = TestConfigs.Default();
-            MatchState state = MatchStateFactory.CreateInitial(config, PlayerSlot.Bottom);
+            // O elixir deixou de ser recurso por jogador e virou metronomo global: ninguem
+            // comeca com carga, e os dois comecam habilitados a receber.
+            MatchState state = MatchStateFactory.CreateInitial(TestConfigs.Default(), PlayerSlot.Bottom);
 
-            Assert.AreEqual(config.Elixir.StartingElixir, state.GetPlayer(PlayerSlot.Bottom).Elixir, 1e-4f);
-            Assert.AreEqual(config.Elixir.StartingElixir, state.GetPlayer(PlayerSlot.Top).Elixir, 1e-4f);
+            foreach (PlayerSlot slot in new[] { PlayerSlot.Bottom, PlayerSlot.Top })
+            {
+                Assert.AreEqual(0, state.GetPlayer(slot).DefenseCharges);
+                Assert.AreEqual(0, state.GetPlayer(slot).CleanCycles);
+                Assert.IsTrue(state.GetPlayer(slot).ReceivesCharges);
+            }
+
+            Assert.AreEqual(0, state.ElixirCycleTicks);
+            Assert.AreEqual(0, state.CompletedElixirCycles);
+            Assert.AreEqual(0, state.PlayedTicks);
         }
 
         [Test]

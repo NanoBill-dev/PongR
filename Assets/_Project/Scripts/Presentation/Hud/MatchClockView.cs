@@ -33,7 +33,7 @@ namespace PongRoyale.Presentation.Hud
             int totalSeconds = Mathf.CeilToInt(remaining);
 
             label.text = $"{totalSeconds / 60:0}:{totalSeconds % 60:00}";
-            label.color = remaining <= state.Config.Rules.DoubleElixirLastSeconds
+            label.color = remaining <= state.Config.Rules.FinalStretchSeconds
                 ? FinalStretchColor
                 : NormalColor;
         }

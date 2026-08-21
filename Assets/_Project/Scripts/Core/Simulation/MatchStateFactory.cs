@@ -21,7 +21,7 @@ namespace PongRoyale.Core.Simulation
 
             CreatePaddles(state, config);
             CreateTowers(state, config);
-            CreatePlayers(state, config);
+            CreatePlayers(state);
             SpawnInitialBall(state, config, serveToward);
 
             return state;
@@ -75,11 +75,11 @@ namespace PongRoyale.Core.Simulation
                 owner);
         }
 
-        private static void CreatePlayers(MatchState state, MatchConfig config)
+        private static void CreatePlayers(MatchState state)
         {
             for (int i = 0; i < state.Players.Length; i++)
             {
-                state.Players[i] = PlayerState.Create(config.Elixir.StartingElixir);
+                state.Players[i] = PlayerState.Create();
             }
         }
 

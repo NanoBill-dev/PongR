@@ -2,21 +2,40 @@ namespace PongRoyale.Core.Simulation
 {
     /// <summary>
     /// Estado por jogador que nao pertence a nenhuma entidade fisica.
-    /// O deck e a mao entram aqui na FASE 2, quando o sistema de cartas existir.
     /// </summary>
     public struct PlayerState
     {
-        /// <summary>Elixir disponivel. A simulacao garante que fica entre 0 e MaxElixir.</summary>
-        public float Elixir;
+        /// <summary>
+        /// Cargas de defesa acumuladas. Cada uma anula UM acerto em qualquer torre e some.
+        /// </summary>
+        public byte DefenseCharges;
 
-        /// <summary>Torres adversarias derrubadas. Criterio de desempate MostTowersDestroyed.</summary>
+        /// <summary>
+        /// Batidas do ciclo recebidas sem gastar nenhuma carga. ZERA a cada carga gasta.
+        ///
+        /// E o contador que a redencao exige, e ele e separado das cargas de proposito:
+        /// recuperar uma carga rapido devolve o escudo, nao o progresso. Do contrario tomar
+        /// acerto na hora certa sairia quase de graca.
+        /// </summary>
+        public byte CleanCycles;
+
+        /// <summary>
+        /// Se o jogador ainda recebe cargas nas batidas do metronomo. Fica falso ao entrar
+        /// em modo berserk, depois da redencao: a barra continua girando para os dois, mas
+        /// ele deixa de ser abastecido.
+        /// </summary>
+        public bool ReceivesCharges;
+
+        /// <summary>Torres adversarias derrubadas. Alimenta missoes e estatisticas.</summary>
         public byte TowersDestroyed;
 
-        public static PlayerState Create(float startingElixir)
+        public static PlayerState Create()
         {
             return new PlayerState
             {
-                Elixir = startingElixir,
+                DefenseCharges = 0,
+                CleanCycles = 0,
+                ReceivesCharges = true,
                 TowersDestroyed = 0
             };
         }

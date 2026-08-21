@@ -5,18 +5,18 @@ namespace PongRoyale.Tests.EditMode
 {
     /// <summary>
     /// Valida as propriedades derivadas do MatchConfig. Sao pequenas, mas erram calado:
-    /// um DoubleElixirStartTime errado so apareceria como bug de ritmo de partida.
+    /// um FinalStretchStartTime errado so apareceria como bug de ritmo de partida.
     /// </summary>
     public sealed class MatchConfigTests
     {
         [Test]
-        public void DoubleElixirStartsOneMinuteBeforeTheEnd()
+        public void FinalStretchStartsBeforeTheEnd()
         {
             var rules = new MatchRulesConfig(
                 matchDurationSeconds: 180f,
-                doubleElixirLastSeconds: 60f);
+                finalStretchSeconds: 60f);
 
-            Assert.AreEqual(120f, rules.DoubleElixirStartTime, 1e-4f);
+            Assert.AreEqual(120f, rules.FinalStretchStartTime, 1e-4f);
         }
 
         [Test]

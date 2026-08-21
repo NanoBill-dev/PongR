@@ -1,4 +1,5 @@
 using PongRoyale.Core.Ball;
+using PongRoyale.Core.Economy;
 using PongRoyale.Core.Effects;
 using PongRoyale.Core.Events;
 using PongRoyale.Core.Paddle;
@@ -82,8 +83,12 @@ namespace PongRoyale.Core.Simulation
                 // Efeitos contam o tempo DEPOIS da fisica: um power-up concedido neste tick
                 // vale por ele inteiro, e um que expira so deixa de valer no proximo.
                 EffectResolver.Advance(State, MatchConstants.FixedDeltaTime, Events);
+                ElixirResolver.Advance(State, Events);
 
-                State.ElapsedSeconds += MatchConstants.FixedDeltaTime;
+                // O relogio e DERIVADO do contador inteiro, nunca acumulado. Somar o passo
+                // fixo milhares de vezes num float faz a partida terminar fora da hora.
+                State.PlayedTicks++;
+                State.ElapsedSeconds = State.PlayedTicks * MatchConstants.FixedDeltaTime;
             }
 
             State.Tick++;

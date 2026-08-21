@@ -40,13 +40,12 @@ namespace PongRoyale.Tests.EditMode
                     kingHalfSize: new Vector2(1.2f, 0.8f),
                     guardHalfSize: new Vector2(0.9f, 0.7f)),
                 new ElixirConfig(
-                    maxElixir: 10f,
-                    startingElixir: 5f,
-                    secondsPerElixir: 2f,
-                    secondsPerElixirInDoubleMode: 1f),
+                    cycleSeconds: 20f,
+                    maxDefenseCharges: 3,
+                    cleanCyclesForRedemption: 3),
                 new MatchRulesConfig(
                     matchDurationSeconds: 180f,
-                    doubleElixirLastSeconds: 60f),
+                    finalStretchSeconds: 60f),
                 new EffectConfig(
                     defaultDurationSeconds: 6f,
                     combinedDurationSeconds: 3.5f),

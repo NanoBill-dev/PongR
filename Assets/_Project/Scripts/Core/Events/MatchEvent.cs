@@ -20,7 +20,10 @@ namespace PongRoyale.Core.Events
         PhaseChanged = 8,
         MatchEnded = 9,
         EffectGained = 10,
-        EffectExpired = 11
+        EffectExpired = 11,
+        ElixirCycleCompleted = 12,
+        DefenseChargeGained = 13,
+        DefenseChargeConsumed = 14
     }
 
     /// <summary>
@@ -85,6 +88,17 @@ namespace PongRoyale.Core.Events
 
         public static MatchEvent EffectExpired(int tick, PlayerSlot slot, ushort effectId) =>
             new MatchEvent(MatchEventType.EffectExpired, tick, slot, 0, effectId, Vector2.Zero);
+
+        /// <summary>A barra virou. Vale para os dois jogadores: o metronomo e global.</summary>
+        public static MatchEvent ElixirCycleCompleted(int tick, int completedCycles) =>
+            new MatchEvent(MatchEventType.ElixirCycleCompleted, tick, PlayerSlot.Bottom, 0, completedCycles, Vector2.Zero);
+
+        /// <summary><see cref="MatchEvent.Value"/> carrega o total de cargas apos a mudanca.</summary>
+        public static MatchEvent DefenseChargeGained(int tick, PlayerSlot slot, int charges) =>
+            new MatchEvent(MatchEventType.DefenseChargeGained, tick, slot, 0, charges, Vector2.Zero);
+
+        public static MatchEvent DefenseChargeConsumed(int tick, PlayerSlot slot, int charges) =>
+            new MatchEvent(MatchEventType.DefenseChargeConsumed, tick, slot, 0, charges, Vector2.Zero);
 
         public static MatchEvent MatchEnded(int tick, MatchOutcome outcome) =>
             new MatchEvent(MatchEventType.MatchEnded, tick, PlayerSlot.Bottom, (byte)outcome, 0f, Vector2.Zero);

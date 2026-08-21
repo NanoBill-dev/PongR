@@ -50,6 +50,25 @@ namespace PongRoyale.Core.Simulation
         public MatchPhase Phase;
         public MatchResult Result;
 
+        /// <summary>
+        /// Ticks decorridos com a partida em andamento. Diferente de <see cref="Tick"/>, que
+        /// conta tambem o aquecimento.
+        ///
+        /// O relogio e derivado DESTE contador, e nao acumulado em float. Somar 1/60 sete mil
+        /// vezes ao longo de uma partida descarta bits e o total chega atrasado; multiplicar
+        /// um inteiro pelo passo fixo e exato e identico em qualquer maquina.
+        /// </summary>
+        public int PlayedTicks;
+
+        /// <summary>
+        /// Progresso do ciclo atual da barra de elixir, em TICKS. Aritmetica inteira pelo
+        /// mesmo motivo: a batida precisa cair sempre no mesmo tick, dos dois lados.
+        /// </summary>
+        public int ElixirCycleTicks;
+
+        /// <summary>Quantas batidas do metronomo ja ocorreram na partida.</summary>
+        public int CompletedElixirCycles;
+
         public MatchState(MatchConfig config)
         {
             Config = config;

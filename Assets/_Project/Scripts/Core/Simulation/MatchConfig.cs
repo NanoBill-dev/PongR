@@ -174,29 +174,34 @@ namespace PongRoyale.Core.Simulation
     }
 
     /// <summary>
-    /// Economia. A simulacao nunca permite elixir negativo nem acima do maximo.
+    /// O ciclo de elixir. Nao e moeda: e um METRONOMO GLOBAL, um relogio unico que comeca
+    /// junto e bate igual para os dois jogadores. O que difere e quem RECEBE a carga na
+    /// batida — quem esta em modo berserk simplesmente nao recebe.
+    ///
+    /// Consequencia deliberada: perder uma carga faltando pouco para a batida devolve ela
+    /// quase de graca; perder logo depois deixa o jogador exposto por um ciclo inteiro. E
+    /// sorte real e nao injusta, porque ninguem escolhe quando toma o acerto.
     /// </summary>
     public readonly struct ElixirConfig
     {
-        public readonly float MaxElixir;
-        public readonly float StartingElixir;
+        /// <summary>Duracao de um ciclo completo da barra.</summary>
+        public readonly float CycleSeconds;
 
-        /// <summary>Segundos por ponto de elixir no ritmo normal.</summary>
-        public readonly float SecondsPerElixir;
+        /// <summary>Teto de cargas de defesa acumuladas.</summary>
+        public readonly int MaxDefenseCharges;
 
-        /// <summary>Segundos por ponto de elixir durante o modo duplo.</summary>
-        public readonly float SecondsPerElixirInDoubleMode;
+        /// <summary>
+        /// Ciclos consecutivos SEM gastar carga exigidos para a redencao. Gastar zera a
+        /// contagem, entao o requisito equivale a atravessar varios ciclos inteiros sem
+        /// tomar um acerto sequer.
+        /// </summary>
+        public readonly int CleanCyclesForRedemption;
 
-        public ElixirConfig(
-            float maxElixir,
-            float startingElixir,
-            float secondsPerElixir,
-            float secondsPerElixirInDoubleMode)
+        public ElixirConfig(float cycleSeconds, int maxDefenseCharges, int cleanCyclesForRedemption)
         {
-            MaxElixir = maxElixir;
-            StartingElixir = startingElixir;
-            SecondsPerElixir = secondsPerElixir;
-            SecondsPerElixirInDoubleMode = secondsPerElixirInDoubleMode;
+            CycleSeconds = cycleSeconds;
+            MaxDefenseCharges = maxDefenseCharges;
+            CleanCyclesForRedemption = cleanCyclesForRedemption;
         }
     }
 
@@ -206,16 +211,16 @@ namespace PongRoyale.Core.Simulation
         public readonly float MatchDurationSeconds;
 
         /// <summary>Quantos segundos finais rodam com elixir em ritmo dobrado.</summary>
-        public readonly float DoubleElixirLastSeconds;
+        public readonly float FinalStretchSeconds;
 
-        public MatchRulesConfig(float matchDurationSeconds, float doubleElixirLastSeconds)
+        public MatchRulesConfig(float matchDurationSeconds, float finalStretchSeconds)
         {
             MatchDurationSeconds = matchDurationSeconds;
-            DoubleElixirLastSeconds = doubleElixirLastSeconds;
+            FinalStretchSeconds = finalStretchSeconds;
         }
 
         /// <summary>Instante, em segundos desde o inicio, em que o elixir dobra o ritmo.</summary>
-        public float DoubleElixirStartTime => MatchDurationSeconds - DoubleElixirLastSeconds;
+        public float FinalStretchStartTime => MatchDurationSeconds - FinalStretchSeconds;
     }
 
     /// <summary>Duracao dos efeitos de power-up.</summary>

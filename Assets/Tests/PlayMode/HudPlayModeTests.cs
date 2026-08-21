@@ -111,16 +111,20 @@ namespace PongRoyale.Tests.PlayMode
         [UnityTest]
         public IEnumerator ClockCountsDown()
         {
+            // Testa o comportamento de verdade, deixando o tempo passar, em vez de forcar o
+            // estado. Escrever em ElapsedSeconds nao funcionaria — ele e DERIVADO de
+            // PlayedTicks e recalculado a cada tick — e escrever em PlayedTicks so
+            // apareceria no frame em que o acumulador realmente rodasse um tick.
             MatchRunner runner = FindRunner();
             yield return null;
 
             var label = FindChild("Hud/MatchClock", "Label").GetComponent<TextMesh>();
             string atStart = label.text;
 
-            runner.Simulation.State.ElapsedSeconds = 5f;
-            yield return null;
+            yield return new WaitForSeconds(1.2f);
 
-            Assert.AreNotEqual(atStart, label.text);
+            Assert.AreNotEqual(atStart, label.text, "O relogio nao andou.");
+            Assert.Greater(runner.Simulation.State.PlayedTicks, 0);
         }
 
         [UnityTest]

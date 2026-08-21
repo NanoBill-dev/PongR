@@ -56,11 +56,10 @@ namespace PongRoyale.Gameplay.Balance
                     ToNumerics(towers.kingHalfSize),
                     ToNumerics(towers.guardHalfSize)),
                 new ElixirConfig(
-                    elixir.maxElixir,
-                    elixir.startingElixir,
-                    elixir.secondsPerElixir,
-                    elixir.secondsPerElixirInDoubleMode),
-                new MatchRulesConfig(rules.matchDurationSeconds, rules.doubleElixirLastSeconds),
+                    elixir.cycleSeconds,
+                    elixir.maxDefenseCharges,
+                    elixir.cleanCyclesForRedemption),
+                new MatchRulesConfig(rules.matchDurationSeconds, rules.finalStretchSeconds),
                 new EffectConfig(effects.defaultDurationSeconds, effects.combinedDurationSeconds),
                 new TrophyConfig(trophies.onWin, trophies.onLoss, trophies.onDraw));
         }
@@ -76,8 +75,7 @@ namespace PongRoyale.Gameplay.Balance
         {
             // Invariantes que nao fazem sentido violar nem durante experimentos de balanceamento.
             ball.maxSpeed = Mathf.Max(ball.maxSpeed, ball.initialSpeed);
-            elixir.startingElixir = Mathf.Clamp(elixir.startingElixir, 0f, elixir.maxElixir);
-            rules.doubleElixirLastSeconds = Mathf.Clamp(rules.doubleElixirLastSeconds, 0f, rules.matchDurationSeconds);
+            rules.finalStretchSeconds = Mathf.Clamp(rules.finalStretchSeconds, 0f, rules.matchDurationSeconds);
             paddle.width = Mathf.Min(paddle.width, arena.width);
         }
 
@@ -164,14 +162,15 @@ namespace PongRoyale.Gameplay.Balance
         [Serializable]
         private sealed class ElixirSettings
         {
-            [Min(1f)] public float maxElixir = 10f;
-            [Min(0f)] public float startingElixir = 5f;
+            [Tooltip("Duracao de um ciclo completo da barra. E um metronomo GLOBAL: comeca " +
+                     "junto e bate igual para os dois jogadores.")]
+            [Min(1f)] public float cycleSeconds = 20f;
 
-            [Tooltip("Segundos por ponto de elixir no ritmo normal.")]
-            [Min(0.05f)] public float secondsPerElixir = 2f;
+            [Tooltip("Teto de cargas de defesa acumuladas. Cada carga anula um acerto.")]
+            [Range(1, 9)] public int maxDefenseCharges = 3;
 
-            [Tooltip("Segundos por ponto de elixir no ultimo minuto.")]
-            [Min(0.05f)] public float secondsPerElixirInDoubleMode = 1f;
+            [Tooltip("Ciclos consecutivos SEM gastar carga exigidos para a redencao.")]
+            [Range(1, 9)] public int cleanCyclesForRedemption = 3;
         }
 
         [Serializable]
@@ -180,7 +179,7 @@ namespace PongRoyale.Gameplay.Balance
             [Min(10f)] public float matchDurationSeconds = 180f;
 
             [Tooltip("Segundos finais com elixir em ritmo dobrado.")]
-            [Min(0f)] public float doubleElixirLastSeconds = 60f;
+            [Min(0f)] public float finalStretchSeconds = 60f;
         }
 
         [Serializable]

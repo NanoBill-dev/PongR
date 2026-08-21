@@ -32,6 +32,9 @@ namespace PongRoyale.Core.Simulation
             Combine(ref hash, (int)state.Result.Outcome);
             Combine(ref hash, state.Result.WinnerSlot);
             Combine(ref hash, (int)state.Result.Reason);
+            Combine(ref hash, state.PlayedTicks);
+            Combine(ref hash, state.ElixirCycleTicks);
+            Combine(ref hash, state.CompletedElixirCycles);
 
             for (int i = 0; i < state.Balls.Length; i++)
             {
@@ -70,7 +73,9 @@ namespace PongRoyale.Core.Simulation
 
             for (int i = 0; i < state.Players.Length; i++)
             {
-                Combine(ref hash, state.Players[i].Elixir);
+                Combine(ref hash, state.Players[i].DefenseCharges);
+                Combine(ref hash, state.Players[i].CleanCycles);
+                Combine(ref hash, state.Players[i].ReceivesCharges ? 1 : 0);
                 Combine(ref hash, state.Players[i].TowersDestroyed);
             }
 

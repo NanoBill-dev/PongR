@@ -216,10 +216,14 @@ namespace PongRoyale.Tests.EditMode
             //   11850513362054021575  dano decrescente em acertos consecutivos de torre
             //   18349080180920460615  efeitos de power-up entraram no hash (a FUNCAO mudou,
             //                         o comportamento do jogo nao)
+            //   6397070093354161889   ciclo de elixir e cargas de defesa. Aqui mudaram as
+            //                         DUAS coisas: a funcao ganhou campos novos, e o relogio
+            //                         passou a ser derivado de um contador inteiro em vez de
+            //                         acumulado em float — mais exato, e diferente.
             //
             // Se este teste falhar sem que voce tenha mudado a fisica de proposito, ha
             // regressao. Investigue antes de atualizar.
-            const ulong ExpectedHash = 18349080180920460615UL;
+            const ulong ExpectedHash = 6397070093354161889UL;
 
             ulong actual = RunScenario(1800);
 
