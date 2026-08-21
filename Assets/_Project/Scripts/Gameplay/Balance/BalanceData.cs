@@ -23,6 +23,7 @@ namespace PongRoyale.Gameplay.Balance
         [SerializeField] private TowerSettings towers = new TowerSettings();
         [SerializeField] private ElixirSettings elixir = new ElixirSettings();
         [SerializeField] private MatchRulesSettings rules = new MatchRulesSettings();
+        [SerializeField] private EffectSettings effects = new EffectSettings();
         [SerializeField] private TrophySettings trophies = new TrophySettings();
 
         /// <summary>Converte os dados de autoria no pacote imutavel consumido pela simulacao.</summary>
@@ -60,6 +61,7 @@ namespace PongRoyale.Gameplay.Balance
                     elixir.secondsPerElixir,
                     elixir.secondsPerElixirInDoubleMode),
                 new MatchRulesConfig(rules.matchDurationSeconds, rules.doubleElixirLastSeconds),
+                new EffectConfig(effects.defaultDurationSeconds, effects.combinedDurationSeconds),
                 new TrophyConfig(trophies.onWin, trophies.onLoss, trophies.onDraw));
         }
 
@@ -179,6 +181,17 @@ namespace PongRoyale.Gameplay.Balance
 
             [Tooltip("Segundos finais com elixir em ritmo dobrado.")]
             [Min(0f)] public float doubleElixirLastSeconds = 60f;
+        }
+
+        [Serializable]
+        private sealed class EffectSettings
+        {
+            [Tooltip("Duracao de um power-up coletado sozinho.")]
+            [Range(1f, 15f)] public float defaultDurationSeconds = 6f;
+
+            [Tooltip("Duracao de TODOS os efeitos quando dois ou mais estao ativos juntos. " +
+                     "Substitui o tempo restante: combinar e sempre uma janela curta e fixa.")]
+            [Range(0.5f, 10f)] public float combinedDurationSeconds = 3.5f;
         }
 
         [Serializable]

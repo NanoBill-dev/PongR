@@ -214,10 +214,12 @@ namespace PongRoyale.Tests.EditMode
             //                         frente, separacao real e reflexao alem da parede
             //   17799473700157464437  transferencia de velocidade da raquete para a bola
             //   11850513362054021575  dano decrescente em acertos consecutivos de torre
+            //   18349080180920460615  efeitos de power-up entraram no hash (a FUNCAO mudou,
+            //                         o comportamento do jogo nao)
             //
             // Se este teste falhar sem que voce tenha mudado a fisica de proposito, ha
             // regressao. Investigue antes de atualizar.
-            const ulong ExpectedHash = 11850513362054021575UL;
+            const ulong ExpectedHash = 18349080180920460615UL;
 
             ulong actual = RunScenario(1800);
 

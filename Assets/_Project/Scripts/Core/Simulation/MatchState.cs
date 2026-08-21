@@ -1,5 +1,6 @@
 using PongRoyale.Core.Ball;
 using PongRoyale.Core.Combat;
+using PongRoyale.Core.Effects;
 using PongRoyale.Core.Paddle;
 
 namespace PongRoyale.Core.Simulation
@@ -25,12 +26,24 @@ namespace PongRoyale.Core.Simulation
         public const int TowersPerPlayer = 3;
         public const int TotalTowers = MatchConstants.PlayerCount * TowersPerPlayer;
 
+        /// <summary>
+        /// Efeitos simultaneos por jogador. Dois bastariam para as duas torres laterais; o
+        /// teto e 4 para caber a redencao e qualquer fonte futura sem realocar nada.
+        /// </summary>
+        public const int MaxEffectsPerPlayer = 4;
+
         public readonly MatchConfig Config;
 
         public readonly BallState[] Balls = new BallState[MaxBalls];
         public readonly PaddleState[] Paddles = new PaddleState[MatchConstants.PlayerCount];
         public readonly TowerState[] Towers = new TowerState[TotalTowers];
         public readonly PlayerState[] Players = new PlayerState[MatchConstants.PlayerCount];
+
+        /// <summary>
+        /// Efeitos em vigor, num bloco contiguo por jogador — mesma convencao das torres.
+        /// </summary>
+        public readonly ActiveEffect[] Effects =
+            new ActiveEffect[MatchConstants.PlayerCount * MaxEffectsPerPlayer];
 
         public int Tick;
         public float ElapsedSeconds;

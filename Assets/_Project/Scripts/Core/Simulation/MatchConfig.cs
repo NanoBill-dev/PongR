@@ -218,6 +218,26 @@ namespace PongRoyale.Core.Simulation
         public float DoubleElixirStartTime => MatchDurationSeconds - DoubleElixirLastSeconds;
     }
 
+    /// <summary>Duracao dos efeitos de power-up.</summary>
+    public readonly struct EffectConfig
+    {
+        /// <summary>Duracao de um power-up coletado sozinho.</summary>
+        public readonly float DefaultDurationSeconds;
+
+        /// <summary>
+        /// Duracao de TODOS os efeitos quando dois ou mais estao em vigor ao mesmo tempo.
+        /// Substitui o tempo restante, para mais ou para menos: combinar e sempre uma janela
+        /// curta e fixa. E o que transforma a segunda coleta numa decisao de ritmo.
+        /// </summary>
+        public readonly float CombinedDurationSeconds;
+
+        public EffectConfig(float defaultDurationSeconds, float combinedDurationSeconds)
+        {
+            DefaultDurationSeconds = defaultDurationSeconds;
+            CombinedDurationSeconds = combinedDurationSeconds;
+        }
+    }
+
     /// <summary>Trofeus ganhos ou perdidos ao fim da partida.</summary>
     public readonly struct TrophyConfig
     {
@@ -246,6 +266,7 @@ namespace PongRoyale.Core.Simulation
         public readonly TowerConfig Tower;
         public readonly ElixirConfig Elixir;
         public readonly MatchRulesConfig Rules;
+        public readonly EffectConfig Effects;
         public readonly TrophyConfig Trophies;
 
         public MatchConfig(
@@ -255,6 +276,7 @@ namespace PongRoyale.Core.Simulation
             TowerConfig tower,
             ElixirConfig elixir,
             MatchRulesConfig rules,
+            EffectConfig effects,
             TrophyConfig trophies)
         {
             Arena = arena;
@@ -263,6 +285,7 @@ namespace PongRoyale.Core.Simulation
             Tower = tower;
             Elixir = elixir;
             Rules = rules;
+            Effects = effects;
             Trophies = trophies;
         }
     }

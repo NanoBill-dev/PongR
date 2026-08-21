@@ -18,7 +18,9 @@ namespace PongRoyale.Core.Events
         TowerDestroyed = 6,
         CardPlayed = 7,
         PhaseChanged = 8,
-        MatchEnded = 9
+        MatchEnded = 9,
+        EffectGained = 10,
+        EffectExpired = 11
     }
 
     /// <summary>
@@ -73,6 +75,16 @@ namespace PongRoyale.Core.Events
 
         public static MatchEvent PhaseChanged(int tick, MatchPhase phase) =>
             new MatchEvent(MatchEventType.PhaseChanged, tick, PlayerSlot.Bottom, (byte)phase, 0f, Vector2.Zero);
+
+        /// <summary>
+        /// O identificador do efeito vai em <see cref="Value"/> e nao em EntityIndex, que e
+        /// byte: ids de carta sao ushort para caber um repositorio grande.
+        /// </summary>
+        public static MatchEvent EffectGained(int tick, PlayerSlot slot, ushort effectId) =>
+            new MatchEvent(MatchEventType.EffectGained, tick, slot, 0, effectId, Vector2.Zero);
+
+        public static MatchEvent EffectExpired(int tick, PlayerSlot slot, ushort effectId) =>
+            new MatchEvent(MatchEventType.EffectExpired, tick, slot, 0, effectId, Vector2.Zero);
 
         public static MatchEvent MatchEnded(int tick, MatchOutcome outcome) =>
             new MatchEvent(MatchEventType.MatchEnded, tick, PlayerSlot.Bottom, (byte)outcome, 0f, Vector2.Zero);

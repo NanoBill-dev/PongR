@@ -74,6 +74,18 @@ namespace PongRoyale.Core.Simulation
                 Combine(ref hash, state.Players[i].TowersDestroyed);
             }
 
+            for (int i = 0; i < state.Effects.Length; i++)
+            {
+                Combine(ref hash, state.Effects[i].EffectId);
+
+                // Slot livre nao contribui com tempo: lixo de um efeito ja expirado nao pode
+                // diferenciar dois estados logicamente identicos.
+                if (state.Effects[i].IsActive)
+                {
+                    Combine(ref hash, state.Effects[i].RemainingSeconds);
+                }
+            }
+
             return hash;
         }
 

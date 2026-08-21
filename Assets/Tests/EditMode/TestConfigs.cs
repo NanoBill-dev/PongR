@@ -47,6 +47,9 @@ namespace PongRoyale.Tests.EditMode
                 new MatchRulesConfig(
                     matchDurationSeconds: 180f,
                     doubleElixirLastSeconds: 60f),
+                new EffectConfig(
+                    defaultDurationSeconds: 6f,
+                    combinedDurationSeconds: 3.5f),
                 new TrophyConfig(onWin: 30, onLoss: -25, onDraw: 0));
         }
     }
