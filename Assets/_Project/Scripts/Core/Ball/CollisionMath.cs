@@ -32,6 +32,12 @@ namespace PongRoyale.Core.Ball
         /// <param name="delta">Deslocamento completo do passo.</param>
         /// <param name="time">Fracao de 0 a 1 do deslocamento ate o toque.</param>
         /// <param name="normal">Normal da face tocada, apontando contra o movimento.</param>
+        /// <param name="separation">
+        /// Quanto a bola precisa andar ao longo da normal para sair de dentro da caixa.
+        /// Vale zero no caso normal e fica positivo quando a bola JA COMECOU sobreposta —
+        /// o que acontece quando a raquete se move para dentro dela. Empurrar apenas uma
+        /// folga simbolica nesse caso deixa a bola presa, colidindo de novo a cada tick.
+        /// </param>
         public static bool SweepCircleVsBox(
             Vector2 origin,
             Vector2 delta,
@@ -39,10 +45,12 @@ namespace PongRoyale.Core.Ball
             Vector2 boxCenter,
             Vector2 boxHalfSize,
             out float time,
-            out Vector2 normal)
+            out Vector2 normal,
+            out float separation)
         {
             time = 0f;
             normal = Vector2.Zero;
+            separation = 0f;
 
             Vector2 relative = origin - boxCenter;
             Vector2 expanded = boxHalfSize + new Vector2(radius, radius);
@@ -101,6 +109,19 @@ namespace PongRoyale.Core.Ball
             normal = entryAxis == 0
                 ? new Vector2(entryNormalSign, 0f)
                 : new Vector2(0f, entryNormalSign);
+
+            if (entryTime < 0f)
+            {
+                float axisRelative = entryAxis == 0 ? relative.X : relative.Y;
+                float axisExtent = entryAxis == 0 ? expanded.X : expanded.Y;
+
+                // Distancia ate a face de saida, medida na direcao da normal.
+                separation = entryNormalSign > 0f
+                    ? axisExtent - axisRelative
+                    : axisRelative + axisExtent;
+                separation = Math.Max(separation, 0f);
+            }
+
             return true;
         }
 
@@ -114,14 +135,18 @@ namespace PongRoyale.Core.Ball
             float radius,
             Vector2 halfExtents,
             out float time,
-            out Vector2 normal)
+            out Vector2 normal,
+            out float separation)
         {
             time = 1f;
             normal = Vector2.Zero;
+            separation = 0f;
             bool hit = false;
 
-            TryBoundsAxis(origin.X, delta.X, halfExtents.X - radius, isHorizontal: true, ref time, ref normal, ref hit);
-            TryBoundsAxis(origin.Y, delta.Y, halfExtents.Y - radius, isHorizontal: false, ref time, ref normal, ref hit);
+            TryBoundsAxis(origin.X, delta.X, halfExtents.X - radius, isHorizontal: true,
+                ref time, ref normal, ref separation, ref hit);
+            TryBoundsAxis(origin.Y, delta.Y, halfExtents.Y - radius, isHorizontal: false,
+                ref time, ref normal, ref separation, ref hit);
 
             return hit;
         }
@@ -133,6 +158,7 @@ namespace PongRoyale.Core.Ball
             bool isHorizontal,
             ref float bestTime,
             ref Vector2 bestNormal,
+            ref float bestSeparation,
             ref bool hit)
         {
             if (Math.Abs(delta) < Epsilon)
@@ -140,15 +166,38 @@ namespace PongRoyale.Core.Ball
                 return;
             }
 
-            float target = delta > 0f ? limit : -limit;
-            float candidate = (target - origin) / delta;
+            // Quanto a bola JA passou do limite nesta direcao. Positivo significa que ela
+            // esta fora da arena. Ignorar esse caso (tempo negativo) e o que fazia a bola
+            // grudar na parede: ela era reposicionada todo tick e nunca chegava a refletir.
+            float overshoot = delta > 0f ? origin - limit : -limit - origin;
 
-            if (candidate < 0f || candidate > bestTime)
+            float candidate;
+            float separation;
+
+            if (overshoot > 0f)
+            {
+                candidate = 0f;
+                separation = overshoot;
+            }
+            else
+            {
+                float target = delta > 0f ? limit : -limit;
+                candidate = (target - origin) / delta;
+                separation = 0f;
+
+                if (candidate < 0f)
+                {
+                    return;
+                }
+            }
+
+            if (candidate > bestTime)
             {
                 return;
             }
 
             bestTime = candidate;
+            bestSeparation = separation;
             float sign = delta > 0f ? -1f : 1f;
             bestNormal = isHorizontal ? new Vector2(sign, 0f) : new Vector2(0f, sign);
             hit = true;

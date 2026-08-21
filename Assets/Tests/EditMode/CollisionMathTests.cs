@@ -22,7 +22,8 @@ namespace PongRoyale.Tests.EditMode
                 boxCenter: new Vector2(3f, 0f),
                 boxHalfSize: new Vector2(0.5f, 0.5f),
                 out float time,
-                out Vector2 normal);
+                out Vector2 normal,
+                out _);
 
             Assert.IsTrue(hit);
             Assert.AreEqual(0.5f, time, Tolerance);
@@ -39,6 +40,7 @@ namespace PongRoyale.Tests.EditMode
                 boxCenter: new Vector2(3f, 0f),
                 boxHalfSize: new Vector2(0.5f, 0.5f),
                 out _,
+                out _,
                 out _);
 
             Assert.IsFalse(hit);
@@ -54,6 +56,7 @@ namespace PongRoyale.Tests.EditMode
                 radius: 0.5f,
                 boxCenter: new Vector2(10f, 0f),
                 boxHalfSize: new Vector2(0.5f, 0.5f),
+                out _,
                 out _,
                 out _);
 
@@ -72,10 +75,16 @@ namespace PongRoyale.Tests.EditMode
                 boxCenter: Vector2.Zero,
                 boxHalfSize: new Vector2(0.5f, 0.5f),
                 out float time,
-                out _);
+                out _,
+                out float separation);
 
             Assert.IsTrue(hit);
             Assert.AreEqual(0f, time, Tolerance);
+            Assert.Greater(
+                separation,
+                0f,
+                "Comecando sobreposta, a varredura precisa dizer quanto empurrar para " +
+                "desencaixar. Sem isso a bola fica presa colidindo a cada tick.");
         }
 
         [Test]
@@ -88,7 +97,8 @@ namespace PongRoyale.Tests.EditMode
                 radius: 0.25f,
                 halfExtents: new Vector2(5f, 9f),
                 out float time,
-                out Vector2 normal);
+                out Vector2 normal,
+                out _);
 
             Assert.IsTrue(hit);
             Assert.AreEqual(0.475f, time, Tolerance);
@@ -103,6 +113,7 @@ namespace PongRoyale.Tests.EditMode
                 delta: new Vector2(0.1f, 0.1f),
                 radius: 0.25f,
                 halfExtents: new Vector2(5f, 9f),
+                out _,
                 out _,
                 out _);
 

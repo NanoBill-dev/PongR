@@ -50,13 +50,17 @@ namespace PongRoyale.Core.Ball
             /// </summary>
             public readonly float SurfaceX;
 
-            public SurfaceHit(float time, Vector2 normal, SurfaceKind kind, int index, float surfaceX)
+            /// <summary>Quanto empurrar ao longo da normal para desencaixar a bola.</summary>
+            public readonly float Separation;
+
+            public SurfaceHit(float time, Vector2 normal, SurfaceKind kind, int index, float surfaceX, float separation)
             {
                 Time = time;
                 Normal = normal;
                 Kind = kind;
                 Index = index;
                 SurfaceX = surfaceX;
+                Separation = separation;
             }
         }
 
@@ -100,13 +104,63 @@ namespace PongRoyale.Core.Ball
 
                 ball.Position += delta * hit.Time;
                 ResolveHit(state, ref ball, ballIndex, in hit, events);
-                ball.Position += hit.Normal * SurfaceSkin;
+
+                // Separacao real, e nao uma folga simbolica: quando a raquete se move para
+                // dentro da bola, empurrar 1 milimetro deixa a bola ainda sobreposta e ela
+                // volta a colidir no tick seguinte, para sempre.
+                ball.Position += hit.Normal * (hit.Separation + SurfaceSkin);
 
                 remaining *= 1f - hit.Time;
                 iterations++;
             }
 
+            SeparateFromPaddles(state, ref ball);
             KeepInsideArena(state.Config, ref ball);
+        }
+
+        /// <summary>
+        /// Garantia final de que a bola nao termina o tick dentro de uma raquete.
+        ///
+        /// A varredura sozinha nao basta quando a raquete se move PARA DENTRO da bola: cada
+        /// iteracao resolve um contato novo em tempo praticamente zero e so empurra a folga
+        /// de 1 milimetro, entao o orcamento de iteracoes acaba com a raquete tendo
+        /// literalmente atropelado a bola. Aqui a bola e expulsa pelo eixo de menor
+        /// penetracao, que e a saida mais curta e a que menos distorce a trajetoria.
+        /// </summary>
+        private static void SeparateFromPaddles(MatchState state, ref BallState ball)
+        {
+            float radius = state.Config.Ball.Radius;
+            float reachX = state.Config.Paddle.HalfWidth + radius;
+            float reachY = state.Config.Paddle.Thickness * 0.5f + radius;
+
+            for (int i = 0; i < state.Paddles.Length; i++)
+            {
+                float toBallX = ball.Position.X - state.Paddles[i].PositionX;
+                float toBallY = ball.Position.Y - state.Paddles[i].LineY;
+
+                float overlapX = reachX - Math.Abs(toBallX);
+                float overlapY = reachY - Math.Abs(toBallY);
+
+                if (overlapX <= 0f || overlapY <= 0f)
+                {
+                    continue;
+                }
+
+                if (overlapX < overlapY)
+                {
+                    float sign = toBallX >= 0f ? 1f : -1f;
+                    ball.Position = new Vector2(
+                        ball.Position.X + sign * (overlapX + SurfaceSkin),
+                        ball.Position.Y);
+                }
+                else
+                {
+                    float sign = toBallY >= 0f ? 1f : -1f;
+                    ball.Position = new Vector2(
+                        ball.Position.X,
+                        ball.Position.Y + sign * (overlapY + SurfaceSkin));
+                }
+            }
         }
 
         private static bool TryFindEarliestHit(
@@ -123,11 +177,11 @@ namespace PongRoyale.Core.Ball
             var arenaHalfExtents = new Vector2(state.Config.Arena.HalfWidth, state.Config.Arena.HalfHeight);
             if (CollisionMath.SweepCircleInsideBounds(
                     ball.Position, delta, state.Config.Ball.Radius, arenaHalfExtents,
-                    out float wallTime, out Vector2 wallNormal)
+                    out float wallTime, out Vector2 wallNormal, out float wallSeparation)
                 && wallTime < bestTime)
             {
                 bestTime = wallTime;
-                hit = new SurfaceHit(wallTime, wallNormal, SurfaceKind.Wall, 0, 0f);
+                hit = new SurfaceHit(wallTime, wallNormal, SurfaceKind.Wall, 0, 0f, wallSeparation);
                 found = true;
             }
 
@@ -148,12 +202,12 @@ namespace PongRoyale.Core.Ball
 
                 if (CollisionMath.SweepCircleVsBox(
                         ball.Position, relativeDelta, state.Config.Ball.Radius, paddleCenter, paddleHalfSize,
-                        out float paddleTime, out Vector2 paddleNormal)
+                        out float paddleTime, out Vector2 paddleNormal, out float paddleSeparation)
                     && paddleTime < bestTime)
                 {
                     bestTime = paddleTime;
                     float contactX = paddleStartX + paddleTravel * paddleTime;
-                    hit = new SurfaceHit(paddleTime, paddleNormal, SurfaceKind.Paddle, i, contactX);
+                    hit = new SurfaceHit(paddleTime, paddleNormal, SurfaceKind.Paddle, i, contactX, paddleSeparation);
                     found = true;
                 }
             }
@@ -170,11 +224,12 @@ namespace PongRoyale.Core.Ball
                 if (CollisionMath.SweepCircleVsBox(
                         ball.Position, delta, state.Config.Ball.Radius,
                         state.Towers[i].Position, towerHalfSize,
-                        out float towerTime, out Vector2 towerNormal)
+                        out float towerTime, out Vector2 towerNormal, out float towerSeparation)
                     && towerTime < bestTime)
                 {
                     bestTime = towerTime;
-                    hit = new SurfaceHit(towerTime, towerNormal, SurfaceKind.Tower, i, state.Towers[i].Position.X);
+                    hit = new SurfaceHit(
+                        towerTime, towerNormal, SurfaceKind.Tower, i, state.Towers[i].Position.X, towerSeparation);
                     found = true;
                 }
             }
@@ -229,13 +284,31 @@ namespace PongRoyale.Core.Ball
         {
             var slot = (PlayerSlot)hit.Index;
 
+            // A raquete de baixo defende voltada para cima; a de cima, para baixo.
+            float inwardSign = -slot.DirectionSign();
+
+            // So a FACE DA FRENTE rebate. A bola pode chegar por tras — ela passa pelos vaos
+            // entre as torres e volta — e nesse caso aplicar a deflexao a empurraria para
+            // DENTRO da raquete, prendendo-a ali para sempre. De quebra, cada tick preso
+            // somaria +2% de velocidade, o que fazia a bola disparar do nada.
+            bool hitFrontFace = hit.Normal.Y * inwardSign > 0f;
+
+            if (!hitFrontFace)
+            {
+                ball.Direction = CollisionMath.EnforceMinAngleFromHorizontal(
+                    CollisionMath.Reflect(ball.Direction, hit.Normal),
+                    state.Config.Ball.MinAngleFromHorizontalDegrees);
+
+                ball.CollisionSequence++;
+                events.Enqueue(new MatchEvent(
+                    MatchEventType.BallHitObstacle, state.Tick, slot, ballIndex, 0f, ball.Position));
+                return;
+            }
+
             float offset = CollisionMath.NormalizedPaddleOffset(
                 ball.Position.X,
                 hit.SurfaceX,
                 state.Config.Paddle.HalfWidth);
-
-            // A normal aponta para dentro da arena: a raquete de baixo devolve para cima.
-            float inwardSign = -slot.DirectionSign();
 
             ball.Direction = CollisionMath.EnforceMinAngleFromHorizontal(
                 CollisionMath.PaddleDeflection(

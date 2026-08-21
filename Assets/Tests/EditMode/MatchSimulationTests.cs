@@ -206,7 +206,11 @@ namespace PongRoyale.Tests.EditMode
             // do jogo MUDOU — verifique se a mudanca era intencional antes de atualizar o
             // numero abaixo. Nao atualize por reflexo: e justamente esse alarme que protege
             // a fisica de regressao silenciosa.
-            const ulong ExpectedHash = 12391916413434340699UL;
+            // Atualizado em 2026-08-20 apos a correcao dos travamentos da bola: rebatida so
+            // pela face da frente da raquete, separacao real no desencaixe e reflexao de
+            // bola alem do limite da parede. A fisica mudou de PROPOSITO, entao o valor
+            // dourado foi recalculado. O anterior era 12391916413434340699.
+            const ulong ExpectedHash = 16652058934244109118UL;
 
             ulong actual = RunScenario(1800);
 
