@@ -11,16 +11,16 @@
 - [x] T6 Cenas Bootstrap / MainMenu / Match + SceneLoader
 - [x] T8 BalanceData com todos os numeros das secoes 11/13/14
 
-## FASE 1 — Pong jogavel offline
+## FASE 1 — Pong jogavel offline (CONCLUIDA)
 - [x] T9  Core: MatchState, MatchCommand, MatchEvent, MatchStateFactory (MatchSnapshot adiado para a FASE 3: formato de rede sem rede e especulacao)
 - [x] T10 Core: BallResolver + CollisionMath (varredura) + testes
 - [x] T11 Core: PaddleResolver + limites + varredura relativa + testes
 - [x] T12 Core: MatchOutcomeResolver (cascata de desempate) + testes
 - [x] T13 Core: MatchSimulation.Tick() + teste de hash dourado
 - [x] T14 Unity: MatchRunner, views, camera, arena com placeholders (+8 testes PlayMode)
-- [ ] T15 Input System + TouchPaddleInput + AiPaddleInput
+- [x] T15 Input System (PointerPaddleInput unifica dedo e mouse) + AiPaddleInput
 
-**Pronto quando:** da para jogar Pong contra a IA e a regra esta 100% testada em EditMode.
+**Pronto:** da para jogar Pong contra a IA. 108 testes EditMode + 10 PlayMode.
 
 ## FASE 2 — Nucleo Pong Royale
 Elixir, deck 8 / mao 4, 8 cartas, HUD, VFX/SFX basicos.

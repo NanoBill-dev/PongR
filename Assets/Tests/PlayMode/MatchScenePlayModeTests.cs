@@ -133,6 +133,41 @@ namespace PongRoyale.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator BotChasesTheBallOnItsOwnSide()
+        {
+            // Prova a corrente inteira do input: cerebro do bot -> PaddleController ->
+            // MatchCommand -> fila do runner -> PaddleResolver -> view. Qualquer elo
+            // desligado no Inspector deixa a raquete parada em zero.
+            MatchRunner runner = FindRunner();
+            yield return null;
+
+            runner.Simulation.State.Balls[0] = Core.Ball.BallState.Create(
+                new System.Numerics.Vector2(0f, 0f),
+                new System.Numerics.Vector2(0.7f, 0.7f),
+                speed: 10f,
+                damage: 250f);
+
+            yield return new WaitForSeconds(0.6f);
+
+            Assert.Greater(
+                runner.Simulation.State.GetPaddle(PlayerSlot.Top).PositionX,
+                0.2f,
+                "O bot deveria ter perseguido a bola que sobe pela direita.");
+        }
+
+        [UnityTest]
+        public IEnumerator PlayerPaddleStaysPutWithoutInput()
+        {
+            // Sem dedo na tela nenhum comando e emitido, entao a raquete do jogador nao pode
+            // sair sozinha do lugar.
+            MatchRunner runner = FindRunner();
+
+            yield return new WaitForSeconds(0.4f);
+
+            Assert.AreEqual(0f, runner.Simulation.State.GetPaddle(PlayerSlot.Bottom).PositionX, Tolerance);
+        }
+
+        [UnityTest]
         public IEnumerator CameraFramesTheWholeArena()
         {
             MatchRunner runner = FindRunner();

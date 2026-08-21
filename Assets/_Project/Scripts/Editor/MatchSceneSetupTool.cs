@@ -3,6 +3,7 @@ using PongRoyale.Core.Combat;
 using PongRoyale.Core.Simulation;
 using PongRoyale.Gameplay;
 using PongRoyale.Gameplay.Balance;
+using PongRoyale.Gameplay.Input;
 using PongRoyale.Gameplay.Ball;
 using PongRoyale.Gameplay.Paddle;
 using PongRoyale.Gameplay.Towers;
@@ -91,11 +92,12 @@ namespace PongRoyale.Editor
             MatchConfig config = balance.ToMatchConfig();
 
             MatchRunner runner = CreateRunner(balance);
-            CreateCamera(balance);
+            Camera camera = CreateCamera(balance);
             CreateArena(square, config);
             CreatePaddles(paddlePrefab, runner);
             CreateTowers(towerPrefab, runner);
             CreateBall(ballPrefab, runner);
+            CreateInput(runner, camera);
 
             // A ferramenta valida o proprio resultado. Uma referencia perdida aqui nao
             // quebra compilacao nem teste de EditMode: quebraria so a partida, na tela.
@@ -133,7 +135,45 @@ namespace PongRoyale.Editor
             return runner;
         }
 
-        private static void CreateCamera(BalanceData balance)
+        /// <summary>
+        /// Liga as duas fontes de input: o ponteiro controla a raquete de baixo (dedo no
+        /// celular, mouse no Editor) e o bot controla a de cima, o que torna a partida
+        /// jogavel sem multiplayer.
+        /// </summary>
+        private static void CreateInput(MatchRunner runner, Camera camera)
+        {
+            var root = new GameObject("Input");
+
+            var playerObject = new GameObject("Input_Player");
+            playerObject.transform.SetParent(root.transform, worldPositionStays: false);
+
+            var pointerInput = playerObject.AddComponent<PointerPaddleInput>();
+            var pointerSerialized = new SerializedObject(pointerInput);
+            pointerSerialized.FindProperty("worldCamera").objectReferenceValue = camera;
+            pointerSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            AttachController(playerObject, runner, PlayerSlot.Bottom, pointerInput);
+
+            var botObject = new GameObject("Input_Bot");
+            botObject.transform.SetParent(root.transform, worldPositionStays: false);
+
+            var botInput = botObject.AddComponent<AiPaddleInput>();
+            AttachController(botObject, runner, PlayerSlot.Top, botInput);
+        }
+
+        private static void AttachController(
+            GameObject host, MatchRunner runner, PlayerSlot slot, PaddleInputSource source)
+        {
+            var controller = host.AddComponent<PaddleController>();
+
+            var serialized = new SerializedObject(controller);
+            serialized.FindProperty("runner").objectReferenceValue = runner;
+            serialized.FindProperty("slot").enumValueIndex = (int)slot;
+            serialized.FindProperty("inputSource").objectReferenceValue = source;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static Camera CreateCamera(BalanceData balance)
         {
             var cameraObject = new GameObject("Main Camera", typeof(Camera));
             cameraObject.tag = "MainCamera";
@@ -150,6 +190,8 @@ namespace PongRoyale.Editor
             var serialized = new SerializedObject(fitter);
             serialized.FindProperty("balanceData").objectReferenceValue = balance;
             serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            return camera;
         }
 
         private static void CreateArena(Sprite square, MatchConfig config)
