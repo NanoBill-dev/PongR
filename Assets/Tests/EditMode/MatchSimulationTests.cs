@@ -213,10 +213,11 @@ namespace PongRoyale.Tests.EditMode
             //   16652058934244109118  correcao dos travamentos: rebatida so pela face da
             //                         frente, separacao real e reflexao alem da parede
             //   17799473700157464437  transferencia de velocidade da raquete para a bola
+            //   11850513362054021575  dano decrescente em acertos consecutivos de torre
             //
             // Se este teste falhar sem que voce tenha mudado a fisica de proposito, ha
             // regressao. Investigue antes de atualizar.
-            const ulong ExpectedHash = 17799473700157464437UL;
+            const ulong ExpectedHash = 11850513362054021575UL;
 
             ulong actual = RunScenario(1800);
 

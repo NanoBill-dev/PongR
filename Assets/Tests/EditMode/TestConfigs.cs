@@ -22,7 +22,9 @@ namespace PongRoyale.Tests.EditMode
                     radius: 0.25f,
                     baseDamage: 250f,
                     maxDeflectionFromNormalDegrees: 60f,
-                    minAngleFromHorizontalDegrees: 20f),
+                    minAngleFromHorizontalDegrees: 20f,
+                    towerDamageDecay: 0.65f,
+                    towerDamageFloor: 0.2f),
                 new PaddleConfig(
                     width: 2.4f,
                     thickness: 0.4f,

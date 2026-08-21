@@ -53,6 +53,7 @@ namespace PongRoyale.Core.Simulation
                 Combine(ref hash, state.Balls[i].Damage);
                 Combine(ref hash, state.Balls[i].CollisionSequence);
                 Combine(ref hash, state.Balls[i].LastHitByPlayer);
+                Combine(ref hash, state.Balls[i].ConsecutiveTowerHits);
             }
 
             for (int i = 0; i < state.Paddles.Length; i++)

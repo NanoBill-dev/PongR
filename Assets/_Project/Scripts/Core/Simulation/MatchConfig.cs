@@ -52,6 +52,25 @@ namespace PongRoyale.Core.Simulation
         /// </summary>
         public readonly float MinAngleFromHorizontalDegrees;
 
+        /// <summary>
+        /// Quanto do dano sobrevive a cada acerto consecutivo em torre sem a bola voltar ao
+        /// campo. 0.65 significa que o segundo acerto causa 65% do primeiro, o terceiro 65%
+        /// do segundo, e assim por diante.
+        ///
+        /// Existe porque uma bola pinballando atras da raquete derrubava uma torre em
+        /// segundos por um unico erro do jogador. O PRIMEIRO acerto continua valendo cheio,
+        /// entao uma bola bem colocada pelo vao entre as torres e recompensada por inteiro —
+        /// o que decai e o acidente, nao a jogada.
+        /// </summary>
+        public readonly float TowerDamageDecay;
+
+        /// <summary>
+        /// Piso do decaimento, como fracao do dano base. Nao pode ser zero: se o dano
+        /// zerasse, atras da propria raquete viraria o lugar mais seguro do jogo e quem
+        /// estivesse na frente no desempate poderia estagnar a partida de proposito.
+        /// </summary>
+        public readonly float TowerDamageFloor;
+
         public BallConfig(
             float initialSpeed,
             float maxSpeed,
@@ -59,7 +78,9 @@ namespace PongRoyale.Core.Simulation
             float radius,
             float baseDamage,
             float maxDeflectionFromNormalDegrees,
-            float minAngleFromHorizontalDegrees)
+            float minAngleFromHorizontalDegrees,
+            float towerDamageDecay,
+            float towerDamageFloor)
         {
             InitialSpeed = initialSpeed;
             MaxSpeed = maxSpeed;
@@ -68,6 +89,8 @@ namespace PongRoyale.Core.Simulation
             BaseDamage = baseDamage;
             MaxDeflectionFromNormalDegrees = maxDeflectionFromNormalDegrees;
             MinAngleFromHorizontalDegrees = minAngleFromHorizontalDegrees;
+            TowerDamageDecay = towerDamageDecay;
+            TowerDamageFloor = towerDamageFloor;
         }
     }
 

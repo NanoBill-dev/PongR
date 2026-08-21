@@ -37,7 +37,9 @@ namespace PongRoyale.Gameplay.Balance
                     ball.radius,
                     ball.baseDamage,
                     ball.maxDeflectionFromNormalDegrees,
-                    ball.minAngleFromHorizontalDegrees),
+                    ball.minAngleFromHorizontalDegrees,
+                    ball.towerDamageDecay,
+                    ball.towerDamageFloor),
                 new PaddleConfig(
                     paddle.width,
                     paddle.thickness,
@@ -107,6 +109,14 @@ namespace PongRoyale.Gameplay.Balance
 
             [Tooltip("Angulo minimo com a horizontal. Impede a bola de nunca chegar a uma raquete.")]
             [Range(1f, 45f)] public float minAngleFromHorizontalDegrees = 20f;
+
+            [Tooltip("Quanto do dano sobrevive a cada acerto consecutivo em torre sem a bola " +
+                     "voltar ao campo. O primeiro acerto vale sempre 100%.")]
+            [Range(0.1f, 1f)] public float towerDamageDecay = 0.65f;
+
+            [Tooltip("Piso do decaimento. Nunca deixe em zero: dano zerado transformaria a " +
+                     "area atras da propria raquete no lugar mais seguro do jogo.")]
+            [Range(0.05f, 1f)] public float towerDamageFloor = 0.2f;
         }
 
         [Serializable]

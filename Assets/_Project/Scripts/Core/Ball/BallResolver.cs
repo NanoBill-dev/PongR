@@ -116,6 +116,39 @@ namespace PongRoyale.Core.Ball
 
             SeparateFromPaddles(state, ref ball);
             KeepInsideArena(state.Config, ref ball);
+            ResetDamageDecayWhenBackInPlay(state, ref ball);
+        }
+
+        /// <summary>
+        /// Fracao do dano que sobrevive apos N acertos consecutivos em torre.
+        /// O primeiro acerto (N = 0) vale sempre 100%: quem acerta uma bola bem colocada
+        /// pelo vao entre as torres recebe a recompensa inteira.
+        /// </summary>
+        private static float TowerDamageMultiplier(int consecutiveHits, MatchConfig config)
+        {
+            float decayed = (float)Math.Pow(config.Ball.TowerDamageDecay, consecutiveHits);
+            return Math.Max(config.Ball.TowerDamageFloor, decayed);
+        }
+
+        /// <summary>
+        /// A bola voltou ao campo entre as duas linhas de raquete, entao o proximo ataque
+        /// comeca do zero. Sem esta reposicao o decaimento seria permanente e a partida
+        /// inteira viraria dano de raspao.
+        /// </summary>
+        private static void ResetDamageDecayWhenBackInPlay(MatchState state, ref BallState ball)
+        {
+            if (ball.ConsecutiveTowerHits == 0)
+            {
+                return;
+            }
+
+            float bottomLine = state.GetPaddle(PlayerSlot.Bottom).LineY;
+            float topLine = state.GetPaddle(PlayerSlot.Top).LineY;
+
+            if (ball.Position.Y > bottomLine && ball.Position.Y < topLine)
+            {
+                ball.ConsecutiveTowerHits = 0;
+            }
         }
 
         /// <summary>
@@ -395,10 +428,17 @@ namespace PongRoyale.Core.Ball
             var owner = (PlayerSlot)tower.OwnerSlot;
             Vector2 impactPosition = ball.Position;
 
-            bool destroyed = DamageResolver.ApplyDamage(ref tower, ball.Damage);
+            float effectiveDamage = ball.Damage * TowerDamageMultiplier(ball.ConsecutiveTowerHits, state.Config);
+
+            if (ball.ConsecutiveTowerHits < byte.MaxValue)
+            {
+                ball.ConsecutiveTowerHits++;
+            }
+
+            bool destroyed = DamageResolver.ApplyDamage(ref tower, effectiveDamage);
 
             events.Enqueue(MatchEvent.TowerDamaged(
-                state.Tick, owner, (byte)hit.Index, ball.Damage, impactPosition));
+                state.Tick, owner, (byte)hit.Index, effectiveDamage, impactPosition));
 
             if (destroyed)
             {

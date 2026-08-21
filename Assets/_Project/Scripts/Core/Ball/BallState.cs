@@ -40,6 +40,13 @@ namespace PongRoyale.Core.Ball
         /// <summary>Quem rebateu por ultimo. Define a quem creditar o dano nas torres.</summary>
         public sbyte LastHitByPlayer;
 
+        /// <summary>
+        /// Acertos em torre desde a ultima vez que a bola voltou ao campo. Cada acerto
+        /// consecutivo causa menos dano: e o que impede uma bola pinballando atras da
+        /// raquete de derreter uma torre em segundos.
+        /// </summary>
+        public byte ConsecutiveTowerHits;
+
         public bool IsActive;
 
         public float CurrentSpeed => BaseSpeed * SpeedMultiplier;
@@ -57,6 +64,7 @@ namespace PongRoyale.Core.Ball
                 Damage = damage,
                 CollisionSequence = 0,
                 LastHitByPlayer = NoPlayer,
+                ConsecutiveTowerHits = 0,
                 IsActive = true
             };
         }
