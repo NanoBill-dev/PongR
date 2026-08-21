@@ -144,6 +144,63 @@ namespace PongRoyale.Tests.EditMode
                 "A bola continuou dentro da raquete depois da resolucao.");
         }
 
+        [Test]
+        public void BallPinnedBetweenPaddleAndSideWallLeavesImmediately()
+        {
+            // Relatado no playtest: com a raquete encostada na parede, a bola grudava por
+            // alguns instantes antes de sair. A separacao lateral jogava a bola para fora da
+            // arena e o clamp de seguranca a devolvia para dentro da raquete — as duas
+            // garantias brigando. Aqui a saida tem que ser pelo eixo vertical.
+            float limitX = state.Config.Arena.HalfWidth - state.Config.Paddle.HalfWidth;
+            SetPaddleX(PlayerSlot.Bottom, limitX);
+
+            float lineY = state.GetPaddle(PlayerSlot.Bottom).LineY;
+            state.Balls[0] = BallState.Create(
+                new Vector2(limitX + 0.9f, lineY), new Vector2(0f, -1f), 10f, 250f);
+
+            Step(1);
+
+            Assert.IsFalse(
+                IsOverlappingPaddle(PlayerSlot.Bottom),
+                "A bola continuou presa entre a raquete e a parede.");
+            Assert.LessOrEqual(
+                Math.Abs(state.Balls[0].Position.X),
+                state.Config.Arena.HalfWidth - state.Config.Ball.Radius + 1e-3f,
+                "A separacao empurrou a bola para fora da arena.");
+        }
+
+        [Test]
+        public void BallStaysInsideTheArenaWhilePinnedAgainstEitherWall()
+        {
+            // Os dois lados, por varios ticks: nem sobreposicao nem fuga pela parede.
+            foreach (float side in new[] { -1f, 1f })
+            {
+                state = MatchStateFactory.CreateInitial(TestConfigs.Default(), PlayerSlot.Bottom);
+                events = new MatchEventQueue();
+
+                float limitX = side * (state.Config.Arena.HalfWidth - state.Config.Paddle.HalfWidth);
+                SetPaddleX(PlayerSlot.Bottom, limitX);
+
+                float lineY = state.GetPaddle(PlayerSlot.Bottom).LineY;
+                state.Balls[0] = BallState.Create(
+                    new Vector2(limitX + side * 0.9f, lineY + 0.1f), new Vector2(side, -1f), 14f, 250f);
+
+                for (int tick = 0; tick < 60; tick++)
+                {
+                    Step(1);
+
+                    Assert.LessOrEqual(
+                        Math.Abs(state.Balls[0].Position.X),
+                        state.Config.Arena.HalfWidth,
+                        $"Bola saiu da arena no lado {side}, tick {tick}.");
+                }
+
+                Assert.IsFalse(
+                    IsOverlappingPaddle(PlayerSlot.Bottom),
+                    $"Bola terminou dentro da raquete no lado {side}.");
+            }
+        }
+
         private bool IsOverlappingPaddle(PlayerSlot slot)
         {
             PaddleState paddle = state.GetPaddle(slot);

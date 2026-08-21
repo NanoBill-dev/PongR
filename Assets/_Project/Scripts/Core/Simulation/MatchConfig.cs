@@ -86,18 +86,30 @@ namespace PongRoyale.Core.Simulation
         /// <summary>Multiplicador do arraste do dedo em unidades de mundo.</summary>
         public readonly float DragSensitivity;
 
+        /// <summary>
+        /// Fracao da velocidade da raquete transferida para a bola no impacto.
+        ///
+        /// Zero devolve o Pong classico, onde so o ponto do impacto define o angulo. Acima
+        /// de zero, varrer a raquete no momento da rebatida empurra a bola para o lado —
+        /// permite atacar em vez de so devolver, e e a ferramenta para expulsar a bola que
+        /// entrou atras da raquete.
+        /// </summary>
+        public readonly float SweepCarry;
+
         public PaddleConfig(
             float width,
             float thickness,
             float maxSpeed,
             float smoothingTime,
-            float dragSensitivity)
+            float dragSensitivity,
+            float sweepCarry)
         {
             Width = width;
             Thickness = thickness;
             MaxSpeed = maxSpeed;
             SmoothingTime = smoothingTime;
             DragSensitivity = dragSensitivity;
+            SweepCarry = sweepCarry;
         }
 
         public float HalfWidth => Width * 0.5f;

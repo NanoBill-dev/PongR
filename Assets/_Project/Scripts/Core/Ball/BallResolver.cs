@@ -119,6 +119,47 @@ namespace PongRoyale.Core.Ball
         }
 
         /// <summary>
+        /// Compoe a velocidade de saida da bola: a direcao decidida pela colisao, mais a
+        /// parcela da velocidade da raquete que ela carrega consigo.
+        ///
+        /// Trabalhar em espaco de VELOCIDADE, e nao de angulo, e o que faz a varredura
+        /// influenciar angulo e rapidez ao mesmo tempo — como empurrar a bola de verdade.
+        /// O teto de velocidade continua valendo, entao varrer nao burla o limite do jogo.
+        ///
+        /// Nota para a FASE 2: quando Congelamento e Turbina existirem, SpeedMultiplier
+        /// deixara de ser 1 e esta soma precisara ser feita consistentemente em espaco de
+        /// velocidade base.
+        /// </summary>
+        private static void ApplyOutgoingVelocity(
+            ref BallState ball,
+            Vector2 direction,
+            float speed,
+            float paddleVelocityX,
+            MatchConfig config)
+        {
+            Vector2 outgoing = direction * speed
+                               + new Vector2(paddleVelocityX * config.Paddle.SweepCarry, 0f);
+
+            float resultingSpeed = outgoing.Length();
+
+            if (resultingSpeed < CollisionMath.Epsilon)
+            {
+                // A varredura anulou a velocidade da bola. Preserva a direcao da colisao em
+                // vez de produzir um vetor nulo, que deixaria a bola parada para sempre.
+                ball.Direction = CollisionMath.EnforceMinAngleFromHorizontal(
+                    direction, config.Ball.MinAngleFromHorizontalDegrees);
+                ball.BaseSpeed = speed;
+                return;
+            }
+
+            ball.Direction = CollisionMath.EnforceMinAngleFromHorizontal(
+                outgoing / resultingSpeed,
+                config.Ball.MinAngleFromHorizontalDegrees);
+
+            ball.BaseSpeed = Math.Min(resultingSpeed, config.Ball.MaxSpeed);
+        }
+
+        /// <summary>
         /// Garantia final de que a bola nao termina o tick dentro de uma raquete.
         ///
         /// A varredura sozinha nao basta quando a raquete se move PARA DENTRO da bola: cada
@@ -146,19 +187,27 @@ namespace PongRoyale.Core.Ball
                     continue;
                 }
 
-                if (overlapX < overlapY)
+                float horizontalSign = toBallX >= 0f ? 1f : -1f;
+                float verticalSign = toBallY >= 0f ? 1f : -1f;
+
+                float escapeX = ball.Position.X + horizontalSign * (overlapX + SurfaceSkin);
+                float limitX = state.Config.Arena.HalfWidth - radius;
+
+                // O eixo mais curto costuma ser o melhor, MAS nao quando ele joga a bola
+                // para fora da arena: o clamp de seguranca a traria de volta para dentro da
+                // raquete, e as duas garantias ficariam brigando entre si. E o que fazia a
+                // bola grudar na raquete encostada na parede lateral.
+                bool escapeSidewaysIsValid = Math.Abs(escapeX) <= limitX;
+
+                if (overlapX < overlapY && escapeSidewaysIsValid)
                 {
-                    float sign = toBallX >= 0f ? 1f : -1f;
-                    ball.Position = new Vector2(
-                        ball.Position.X + sign * (overlapX + SurfaceSkin),
-                        ball.Position.Y);
+                    ball.Position = new Vector2(escapeX, ball.Position.Y);
                 }
                 else
                 {
-                    float sign = toBallY >= 0f ? 1f : -1f;
                     ball.Position = new Vector2(
                         ball.Position.X,
-                        ball.Position.Y + sign * (overlapY + SurfaceSkin));
+                        ball.Position.Y + verticalSign * (overlapY + SurfaceSkin));
                 }
             }
         }
@@ -293,11 +342,20 @@ namespace PongRoyale.Core.Ball
             // somaria +2% de velocidade, o que fazia a bola disparar do nada.
             bool hitFrontFace = hit.Normal.Y * inwardSign > 0f;
 
+            float paddleVelocityX = state.Paddles[hit.Index].VelocityX;
+
             if (!hitFrontFace)
             {
-                ball.Direction = CollisionMath.EnforceMinAngleFromHorizontal(
+                // Contato pelas costas ou pela lateral nao e defesa: nao rende os 2% de
+                // ganho nem a posse da bola. Mas a varredura AINDA empurra, e e assim que o
+                // jogador expulsa a bola que entrou atras da raquete — varrer rapido
+                // arremessa a bola para fora em vez de so cutuca-la.
+                ApplyOutgoingVelocity(
+                    ref ball,
                     CollisionMath.Reflect(ball.Direction, hit.Normal),
-                    state.Config.Ball.MinAngleFromHorizontalDegrees);
+                    ball.BaseSpeed,
+                    paddleVelocityX,
+                    state.Config);
 
                 ball.CollisionSequence++;
                 events.Enqueue(new MatchEvent(
@@ -310,16 +368,16 @@ namespace PongRoyale.Core.Ball
                 hit.SurfaceX,
                 state.Config.Paddle.HalfWidth);
 
-            ball.Direction = CollisionMath.EnforceMinAngleFromHorizontal(
-                CollisionMath.PaddleDeflection(
-                    offset,
-                    state.Config.Ball.MaxDeflectionFromNormalDegrees,
-                    inwardSign),
-                state.Config.Ball.MinAngleFromHorizontalDegrees);
+            Vector2 deflection = CollisionMath.PaddleDeflection(
+                offset,
+                state.Config.Ball.MaxDeflectionFromNormalDegrees,
+                inwardSign);
 
-            ball.BaseSpeed = Math.Min(
+            float gainedSpeed = Math.Min(
                 ball.BaseSpeed * (1f + state.Config.Ball.SpeedGainPerHit),
                 state.Config.Ball.MaxSpeed);
+
+            ApplyOutgoingVelocity(ref ball, deflection, gainedSpeed, paddleVelocityX, state.Config);
 
             ball.LastHitByPlayer = (sbyte)slot;
             ball.CollisionSequence++;

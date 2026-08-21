@@ -43,7 +43,8 @@ namespace PongRoyale.Gameplay.Balance
                     paddle.thickness,
                     paddle.maxSpeed,
                     paddle.smoothingTime,
-                    paddle.dragSensitivity),
+                    paddle.dragSensitivity,
+                    paddle.sweepCarry),
                 new TowerConfig(
                     towers.kingMaxHealth,
                     towers.guardMaxHealth,
@@ -122,6 +123,11 @@ namespace PongRoyale.Gameplay.Balance
 
             [Tooltip("Multiplicador do arraste do dedo em unidades de mundo.")]
             [Min(0.1f)] public float dragSensitivity = 1f;
+
+            [Tooltip("Quanto da velocidade da raquete e transferida para a bola no impacto. " +
+                     "Zero = Pong classico, so o ponto do impacto conta. Acima de zero, " +
+                     "varrer a raquete empurra a bola para o lado.")]
+            [Range(0f, 1f)] public float sweepCarry = 0.35f;
         }
 
         [Serializable]

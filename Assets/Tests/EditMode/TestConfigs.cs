@@ -28,7 +28,8 @@ namespace PongRoyale.Tests.EditMode
                     thickness: 0.4f,
                     maxSpeed: 18f,
                     smoothingTime: 0.05f,
-                    dragSensitivity: 1f),
+                    dragSensitivity: 1f,
+                    sweepCarry: 0.35f),
                 new TowerConfig(
                     kingMaxHealth: 5000f,
                     guardMaxHealth: 2500f,

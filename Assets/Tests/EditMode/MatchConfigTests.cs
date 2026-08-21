@@ -36,7 +36,8 @@ namespace PongRoyale.Tests.EditMode
                 thickness: 0.4f,
                 maxSpeed: 18f,
                 smoothingTime: 0.05f,
-                dragSensitivity: 1f);
+                dragSensitivity: 1f,
+                sweepCarry: 0.35f);
 
             Assert.AreEqual(1.2f, paddle.HalfWidth, 1e-4f);
         }
