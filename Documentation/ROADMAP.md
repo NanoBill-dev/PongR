@@ -23,12 +23,21 @@
 **Pronto:** da para jogar Pong contra a IA. 108 testes EditMode + 10 PlayMode.
 
 ## FASE 2 — Nucleo Pong Royale (em andamento)
-- [x] HUD v1: vida das torres com numero, dano flutuante, relogio, painel de resultado
-Elixir, deck 8 / mao 4, 8 cartas, HUD, VFX/SFX basicos.
-Ordem das cartas, da mais simples para a mais dificil:
-Muro -> Escudo -> Congelamento -> Turbina -> Canhao -> Ima -> Portal -> Multibola.
 
-**Pronto quando:** partida completa com cartas, divertida contra bot.
+REDESENHADA em 2026-08-21. O deck de 8 com mao de 4 e custo de elixir foi SUBSTITUIDO
+pelo sistema de power-ups. Especificacao completa em GAME_DESIGN.md.
+
+- [x] HUD v1: vida das torres com numero, dano flutuante, relogio, painel de resultado
+- [x] Dano decrescente em acertos consecutivos de torre
+- [ ] Camada de efeitos com duracao (base comum de todo power-up)
+- [ ] Ciclo de elixir e cargas de defesa
+- [ ] Drop fisico: queda, coleta pela raquete, interceptacao unica
+- [ ] Combinacao de dois ataques (3,5 s)
+- [ ] Redencao e modo berserk
+- [ ] Selecao de deck de 3 antes da partida
+- [ ] Efeitos concretos das cartas
+
+**Pronto quando:** partida completa com power-ups, jogavel e divertida contra o bot.
 
 ## FASE 3 — Multiplayer
 Spike NGO (2 dias) -> lobby -> spawn -> snapshot/extrapolacao -> resultado -> reconexao.

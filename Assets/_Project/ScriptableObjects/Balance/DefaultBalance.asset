@@ -40,7 +40,7 @@ MonoBehaviour:
     secondsPerElixir: 2
     secondsPerElixirInDoubleMode: 1
   rules:
-    matchDurationSeconds: 180
+    matchDurationSeconds: 120
     doubleElixirLastSeconds: 60
     overtimeDurationSeconds: 60
     tiebreak: 0
