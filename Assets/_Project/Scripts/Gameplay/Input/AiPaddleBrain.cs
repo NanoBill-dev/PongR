@@ -23,11 +23,25 @@ namespace PongRoyale.Gameplay.Input
         /// <summary>Teto do erro, para que uma bola rapida nao torne o bot inutil.</summary>
         public float MaxError;
 
+        /// <summary>
+        /// Velocidade maxima com que o bot desloca o proprio alvo, em unidades por segundo.
+        ///
+        /// E o parametro de AGILIDADE, distinto da precisao. Errar a mira nao adianta se o
+        /// bot corrige instantaneamente: ele chega a tempo de qualquer jeito. Limitando o
+        /// quanto o alvo anda por segundo, ele passa a ter dificuldade real com bolas
+        /// cruzadas — que e onde o jogador humano ganha o ponto.
+        ///
+        /// Zero significa SEM LIMITE. E o valor seguro para um campo que pode ficar zerado
+        /// no Inspector: sem limite o bot joga, com limite errado ele congelaria.
+        /// </summary>
+        public float MaxTrackingSpeed;
+
         public static AiSettings Default => new AiSettings
         {
-            ReactionSeconds = 0.12f,
-            ErrorPerSpeedUnit = 0.05f,
-            MaxError = 1.2f
+            ReactionSeconds = 0.25f,
+            ErrorPerSpeedUnit = 0.09f,
+            MaxError = 2f,
+            MaxTrackingSpeed = 9f
         };
     }
 
@@ -52,6 +66,7 @@ namespace PongRoyale.Gameplay.Input
 
         private float timeSinceDecision;
         private float decidedTargetX;
+        private float trackedTargetX;
         private bool hasDecided;
 
         public AiPaddleBrain(int seed)
@@ -67,11 +82,27 @@ namespace PongRoyale.Gameplay.Input
             if (dueForDecision)
             {
                 timeSinceDecision = 0f;
-                hasDecided = true;
                 decidedTargetX = Aim(state, slot, settings);
+
+                if (!hasDecided)
+                {
+                    hasDecided = true;
+                    trackedTargetX = state.GetPaddle(slot).PositionX;
+                }
             }
 
-            return decidedTargetX;
+            if (settings.MaxTrackingSpeed <= 0f)
+            {
+                return decidedTargetX;
+            }
+
+            // O alvo persegue a mira com velocidade limitada. E isso que da peso ao bot:
+            // ele sabe para onde ir, mas nao consegue estar la instantaneamente.
+            float maxStep = settings.MaxTrackingSpeed * deltaTime;
+            float remaining = decidedTargetX - trackedTargetX;
+            trackedTargetX += Math.Clamp(remaining, -maxStep, maxStep);
+
+            return trackedTargetX;
         }
 
         private float Aim(MatchState state, PlayerSlot slot, AiSettings settings)

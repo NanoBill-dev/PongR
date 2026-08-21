@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using NUnit.Framework;
 using PongRoyale.Core.Ball;
@@ -13,12 +14,16 @@ namespace PongRoyale.Tests.EditMode
 
         private MatchState state;
 
-        /// <summary>Bot sem erro de mira, para os testes de geometria serem exatos.</summary>
+        /// <summary>
+        /// Bot sem erro de mira e sem limite de agilidade, para os testes de geometria
+        /// medirem so a mira. MaxTrackingSpeed em zero significa sem limite.
+        /// </summary>
         private static AiSettings PerfectAim => new AiSettings
         {
             ReactionSeconds = 0f,
             ErrorPerSpeedUnit = 0f,
-            MaxError = 0f
+            MaxError = 0f,
+            MaxTrackingSpeed = 0f
         };
 
         [SetUp]
@@ -152,6 +157,68 @@ namespace PongRoyale.Tests.EditMode
             float fastSpread = MeasureSpread(speed: 25f, settings, lineY);
 
             Assert.Greater(fastSpread, slowSpread);
+        }
+
+        [Test]
+        public void TrackingSpeedLimitsHowFastTheBotRepositions()
+        {
+            // O parametro de agilidade. Com limite, o bot sabe para onde ir mas nao chega
+            // instantaneamente — que e onde uma bola cruzada ganha o ponto.
+            var sluggish = new AiSettings
+            {
+                ReactionSeconds = 0f,
+                ErrorPerSpeedUnit = 0f,
+                MaxError = 0f,
+                MaxTrackingSpeed = 2f
+            };
+
+            PlaceBall(new Vector2(0f, 0f), new Vector2(1f, -1f), 10f);
+
+            var brain = new AiPaddleBrain(seed: 1);
+            float afterOneTick = brain.Decide(state, PlayerSlot.Bottom, Step, sluggish);
+
+            Assert.LessOrEqual(
+                Math.Abs(afterOneTick),
+                sluggish.MaxTrackingSpeed * Step + 1e-4f,
+                "O bot se deslocou mais do que a agilidade dele permite.");
+        }
+
+        [Test]
+        public void SluggishBotStillGetsThereWhenGivenTime()
+        {
+            // O limite precisa atrasar, nao paralisar: com tempo suficiente ele chega.
+            var sluggish = new AiSettings
+            {
+                ReactionSeconds = 0f,
+                ErrorPerSpeedUnit = 0f,
+                MaxError = 0f,
+                MaxTrackingSpeed = 5f
+            };
+
+            float lineY = state.GetPaddle(PlayerSlot.Bottom).LineY;
+            var brain = new AiPaddleBrain(seed: 1);
+            float target = 0f;
+
+            for (int i = 0; i < 300; i++)
+            {
+                PlaceBall(new Vector2(0f, 0f), new Vector2(1f, -1f), 10f);
+                target = brain.Decide(state, PlayerSlot.Bottom, Step, sluggish);
+            }
+
+            Assert.AreEqual(Math.Abs(lineY), target, 1e-2f);
+        }
+
+        [Test]
+        public void ZeroTrackingSpeedMeansNoLimitRatherThanAFrozenBot()
+        {
+            // Protecao contra o campo ficar zerado no Inspector: sem limite o bot joga,
+            // com a interpretacao ingenua de "zero = nao se move" ele congelaria.
+            PlaceBall(new Vector2(0f, 0f), new Vector2(1f, -1f), 10f);
+
+            var brain = new AiPaddleBrain(seed: 1);
+            float target = brain.Decide(state, PlayerSlot.Bottom, Step, PerfectAim);
+
+            Assert.AreNotEqual(0f, target);
         }
 
         [Test]
