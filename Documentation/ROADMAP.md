@@ -106,17 +106,19 @@ baixo do preenchimento.
 
 ### Ordem de trabalho
 
-1. **Correcoes visuais baratas** (quase tudo dado ou ferramenta de cena)
-   - [ ] Moldura abaixo do preenchimento (bug acima)
-   - [ ] Barra de vida ABAIXO de cada torre; hoje aponta para o centro e cobre a raquete
-   - [ ] Barra de elixir borda a borda (largura 8 -> 10)
-   - [ ] Ordem de camadas: bola e raquete estao em 20 e a HUD em 90-100, entao a
-         bola passa POR BAIXO da barra central. Precisam ficar acima
-   - [ ] Fundo mais claro para dar contraste aos elementos
+1. **Correcoes visuais baratas** — FEITO em 2026-08-24
+   - [x] Moldura abaixo do preenchimento (bug acima)
+   - [x] Barra de vida para o lado da BORDA, saindo da frente da raquete
+   - [x] Barra de elixir borda a borda (largura 8 -> 10)
+   - [x] Ordem de camadas: HUD em -7/-6/-5, abaixo da bola (20) e da raquete (10);
+         painel de fim de partida em 150, acima de tudo
+   - [x] Fundo mais claro para dar contraste aos elementos
 
-2. **Indicador de power-up** — o mais valioso da lista
-   - [ ] Icone do efeito ativo perto da raquete, com tempo restante
-   - [ ] O drop caindo precisa mostrar QUAL carta e; hoje e um circulo generico
+2. **Indicador de power-up** — FEITO em 2026-08-24, com SIGLA no lugar de icone
+   - [x] Indicador de efeito ativo dos DOIS jogadores, com sigla e barra de tempo
+   - [x] O drop caindo mostra a sigla da carta dentro dele
+   - [ ] Icones de 16x16 por carta, quando houver arte. As siglas ficam no
+         BalanceData e sao editaveis; o Core segue sem conhecer carta por nome.
    - Sem isso o sistema e invisivel, e sistema invisivel nao influencia decisao.
      Provavelmente contribui para a sensacao do achado principal.
 

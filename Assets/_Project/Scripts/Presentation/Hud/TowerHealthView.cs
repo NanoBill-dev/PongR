@@ -30,7 +30,7 @@ namespace PongRoyale.Presentation.Hud
         [Header("Aparencia")]
         [SerializeField] private float barWidth = 1.8f;
         [SerializeField] private float barHeight = 0.22f;
-        [SerializeField] private float verticalOffset = 1.15f;
+        [SerializeField] private float verticalOffset = 0.78f;
 
         [Tooltip("Mostrar o numero da vida o tempo todo. Util para calibrar balanceamento; " +
                  "no jogo final provavelmente so a barra fica.")]
@@ -49,9 +49,10 @@ namespace PongRoyale.Presentation.Hud
 
             var tower = runner.Simulation.State.GetTower(owner, kind);
 
-            // A barra fica acima da torre para o lado de baixo e abaixo para o de cima:
-            // sempre voltada para o centro do campo, longe da borda da tela.
-            float side = owner == PlayerSlot.Bottom ? 1f : -1f;
+            // A barra fica do lado da BORDA, nunca entre a torre e a raquete. Voltada para o
+            // centro ela cobria justamente a faixa onde o jogador precisa enxergar a propria
+            // raquete e a bola chegando.
+            float side = owner.DirectionSign();
             transform.position = tower.Position.ToWorldPosition() + new Vector3(0f, side * verticalOffset, 0f);
 
             barBackground.transform.localScale = new Vector3(barWidth, barHeight, 1f);

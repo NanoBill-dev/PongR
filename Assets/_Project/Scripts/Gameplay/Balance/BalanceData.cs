@@ -75,6 +75,23 @@ namespace PongRoyale.Gameplay.Balance
         }
 
         /// <summary>
+        /// Abreviacao da carta, para a apresentacao. Fica FORA do MatchConfig de proposito:
+        /// o Core nao conhece carta por nome, so por identificador (ADR-005).
+        /// </summary>
+        public string CardAbbreviation(int effectId)
+        {
+            for (int i = 0; i < modifierCards.Length; i++)
+            {
+                if (modifierCards[i].effectId == effectId)
+                {
+                    return modifierCards[i].abbreviation;
+                }
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
         /// Traduz as cartas-multiplicador editadas no Inspector para a tabela que a
         /// simulacao consulta. Uma carta destas nao tem codigo: existe so como linha aqui.
         /// </summary>
@@ -222,6 +239,7 @@ namespace PongRoyale.Gameplay.Balance
             new ModifierCardSettings
             {
                 name = "Fundacao Rachada",
+                abbreviation = "FR",
                 effectId = 1,
                 target = ModifierTarget.GuardTowerDamageTaken,
                 multiplier = 2f,
@@ -230,6 +248,7 @@ namespace PongRoyale.Gameplay.Balance
             new ModifierCardSettings
             {
                 name = "Coroa Exposta",
+                abbreviation = "CE",
                 effectId = 2,
                 target = ModifierTarget.KingTowerDamageTaken,
                 multiplier = 1.6f,
@@ -238,6 +257,7 @@ namespace PongRoyale.Gameplay.Balance
             new ModifierCardSettings
             {
                 name = "Coice",
+                abbreviation = "CO",
                 effectId = 3,
                 target = ModifierTarget.PaddleSweepCarry,
                 // 0.35 base x 2.857 = 1.0, ou seja transferencia total.
@@ -247,6 +267,7 @@ namespace PongRoyale.Gameplay.Balance
             new ModifierCardSettings
             {
                 name = "Precisao",
+                abbreviation = "PR",
                 effectId = 4,
                 target = ModifierTarget.PaddleMaxDeflection,
                 // 60 graus x 0.5 = 30 graus.
@@ -256,6 +277,7 @@ namespace PongRoyale.Gameplay.Balance
             new ModifierCardSettings
             {
                 name = "Lodo",
+                abbreviation = "LO",
                 effectId = 5,
                 target = ModifierTarget.PaddleMaxSpeed,
                 multiplier = 0.75f,
@@ -268,6 +290,10 @@ namespace PongRoyale.Gameplay.Balance
         {
             [Tooltip("Nome so para leitura no Inspector. A simulacao usa o identificador.")]
             public string name;
+
+            [Tooltip("Duas ou tres letras mostradas dentro do drop e no indicador de efeito " +
+                     "ativo. Substitui o icone enquanto a arte de carta nao existe.")]
+            public string abbreviation = "??";
 
             [Tooltip("Identificador ESTAVEL da carta. E ele que trafega na rede; nunca " +
                      "reaproveite um numero de carta removida.")]

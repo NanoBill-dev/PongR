@@ -37,8 +37,8 @@ namespace PongRoyale.Editor
         private const string PaddlePrefabPath = PrefabFolder + "/Paddle/Paddle.prefab";
         private const string TowerPrefabPath = PrefabFolder + "/Towers/Tower.prefab";
 
-        private static readonly Color BackgroundColor = new Color(0.10f, 0.11f, 0.16f, 1f);
-        private static readonly Color WallColor = new Color(0.30f, 0.33f, 0.42f, 1f);
+        private static readonly Color BackgroundColor = new Color(0.20f, 0.22f, 0.32f, 1f);
+        private static readonly Color WallColor = new Color(0.46f, 0.52f, 0.68f, 1f);
         private static readonly Color BottomColor = new Color(0.30f, 0.80f, 1.00f, 1f);
         private static readonly Color TopColor = new Color(1.00f, 0.42f, 0.62f, 1f);
         private static readonly Color BallColor = new Color(1.00f, 0.95f, 0.70f, 1f);
@@ -102,8 +102,8 @@ namespace PongRoyale.Editor
             CreateTowers(towerPrefab, runner);
             CreateBall(ballPrefab, runner);
             CreateInput(runner, camera);
-            CreatePickups(circle, runner);
             CreateHud(runner, square, config);
+            CreatePickups(circle, runner, LoadBuiltinFont());
 
             // A ferramenta valida o proprio resultado. Uma referencia perdida aqui nao
             // quebra compilacao nem teste de EditMode: quebraria so a partida, na tela.
@@ -177,9 +177,15 @@ namespace PongRoyale.Editor
         private static Texture2D ArtTexture(string file) =>
             AssetDatabase.LoadAssetAtPath<Texture2D>(HudArt + file + ".png");
 
-        private const int HudBackgroundSortingOrder = 90;
-        private const int HudFillSortingOrder = 91;
+        // ORDEM DE CAMADAS. As barras da HUD ficam ABAIXO da bola e da raquete: elas
+        // atravessam o campo de jogo, e ver a bola sumir atras de uma barra e pior do que
+        // ver a barra ser cruzada. Relogio, dano e resultado seguem por cima de tudo.
+        private const int HudFrameSortingOrder = -7;
+        private const int HudBackgroundSortingOrder = -6;
+        private const int HudFillSortingOrder = -5;
+        private const int HudBarTextSortingOrder = -4;
         private const int HudTextSortingOrder = 100;
+        private const int HudOverlaySortingOrder = 150;
         private const int DamageNumberCount = 12;
         private const int PickupSortingOrder = 25;
 
@@ -188,7 +194,7 @@ namespace PongRoyale.Editor
         /// meio da partida. A cor de cada uma sai de quem vai coletar, entao o jogador ve
         /// num relance se o premio que esta caindo e dele.
         /// </summary>
-        private static void CreatePickups(Sprite circle, MatchRunner runner)
+        private static void CreatePickups(Sprite circle, MatchRunner runner, Font font)
         {
             var root = new GameObject("Pickups");
 
@@ -198,10 +204,16 @@ namespace PongRoyale.Editor
                     "Pickup_" + i, circle, Color.white, PickupSortingOrder,
                     Vector3.zero, Vector3.one, root.transform);
 
+                TextMesh label = CreateLabel(
+                    "Label", instance.transform, font, characterSize: 0.045f, fontSize: 60,
+                    sortingOrder: PickupSortingOrder + 1, anchor: TextAnchor.MiddleCenter);
+                label.color = new Color(0.05f, 0.06f, 0.10f, 1f);
+
                 var view = instance.AddComponent<PickupView>();
                 var serialized = new SerializedObject(view);
                 serialized.FindProperty("runner").objectReferenceValue = runner;
                 serialized.FindProperty("pickupIndex").intValue = i;
+                serialized.FindProperty("label").objectReferenceValue = label;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
             }
         }
@@ -212,7 +224,7 @@ namespace PongRoyale.Editor
         /// </summary>
         private static void CreateElixirBar(Transform parent, MatchRunner runner, Sprite square)
         {
-            const float BarWidth = 8f;
+            const float BarWidth = 10f;
             const float BarHeight = 0.18f;
             const float ChargeSize = 0.34f;
             const float ChargeSpacing = 0.5f;
@@ -248,7 +260,7 @@ namespace PongRoyale.Editor
             }
 
             CreateFittedSprite(
-                "BarFrame", Art(HudArt, "barra_essencia_moldura"), HudTextSortingOrder - 1,
+                "BarFrame", Art(HudArt, "barra_essencia_moldura"), HudFrameSortingOrder,
                 Vector3.zero, BarWidth + 0.25f, BarHeight + 0.22f, host.transform);
 
             var view = host.AddComponent<ElixirCycleView>();
@@ -262,6 +274,68 @@ namespace PongRoyale.Editor
             AssignRenderers(serialized.FindProperty("topCharges"), topCharges);
 
             serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// Indicador dos power-ups em vigor: sigla e barra de tempo, para cada jogador.
+        ///
+        /// Era o buraco mais grave da interface. Sem isso o jogador coleta um drop e nao
+        /// sabe o que ganhou nem quando acaba — e um sistema imperceptivel nao influencia
+        /// decisao nenhuma, o que faz o power-up PARECER fraco mesmo quando nao e.
+        /// </summary>
+        private static void CreateActiveEffects(
+            Transform parent, MatchRunner runner, Sprite square, Font font, PlayerSlot slot, float y)
+        {
+            const int Slots = 2;
+            const float SlotSpacing = 1.5f;
+            const float BarWidth = 0.9f;
+            const float BarHeight = 0.09f;
+
+            var host = new GameObject("ActiveEffects_" + slot);
+            host.transform.SetParent(parent, worldPositionStays: false);
+
+            var labels = new TextMesh[Slots];
+            var bars = new Transform[Slots];
+            var barRenderers = new SpriteRenderer[Slots];
+
+            for (int i = 0; i < Slots; i++)
+            {
+                float x = (i - (Slots - 1) * 0.5f) * SlotSpacing;
+
+                labels[i] = CreateLabel(
+                    "Effect_" + i, host.transform, font, characterSize: 0.055f, fontSize: 60,
+                    sortingOrder: HudTextSortingOrder, anchor: TextAnchor.MiddleCenter);
+                labels[i].transform.localPosition = new Vector3(x, y, 0f);
+
+                GameObject bar = CreateSpriteObject(
+                    "EffectTime_" + i, square, new Color(0.85f, 0.92f, 1f, 0.9f), HudTextSortingOrder - 1,
+                    new Vector3(x, y - 0.22f, 0f), new Vector3(BarWidth, BarHeight, 1f), host.transform);
+
+                bars[i] = bar.transform;
+                barRenderers[i] = bar.GetComponent<SpriteRenderer>();
+            }
+
+            var view = host.AddComponent<ActiveEffectView>();
+            var serialized = new SerializedObject(view);
+            serialized.FindProperty("runner").objectReferenceValue = runner;
+            serialized.FindProperty("slot").enumValueIndex = (int)slot;
+            serialized.FindProperty("barWidth").floatValue = BarWidth;
+            serialized.FindProperty("barHeight").floatValue = BarHeight;
+
+            AssignObjects(serialized.FindProperty("labels"), labels);
+            AssignObjects(serialized.FindProperty("timeBars"), bars);
+            AssignRenderers(serialized.FindProperty("timeBarRenderers"), barRenderers);
+
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void AssignObjects(SerializedProperty array, Object[] values)
+        {
+            array.arraySize = values.Length;
+            for (int i = 0; i < values.Length; i++)
+            {
+                array.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            }
         }
 
         private static void AssignRenderers(SerializedProperty array, SpriteRenderer[] renderers)
@@ -304,6 +378,8 @@ namespace PongRoyale.Editor
             CreateResultPanel(root.transform, runner, square, font, config);
             CreateDamageNumbers(root.transform, runner, font);
             CreateElixirBar(root.transform, runner, square);
+            CreateActiveEffects(root.transform, runner, square, font, PlayerSlot.Bottom, -1.35f);
+            CreateActiveEffects(root.transform, runner, square, font, PlayerSlot.Top, 1.35f);
         }
 
         private static void CreateTowerHealth(
@@ -322,11 +398,11 @@ namespace PongRoyale.Editor
 
             TextMesh label = CreateLabel(
                 "Label", host.transform, font, characterSize: 0.05f, fontSize: 60,
-                sortingOrder: HudTextSortingOrder, anchor: TextAnchor.MiddleCenter);
-            label.transform.localPosition = new Vector3(0f, 0.32f, 0f);
+                sortingOrder: HudBarTextSortingOrder, anchor: TextAnchor.MiddleCenter);
+            label.transform.localPosition = new Vector3(0f, 0.3f, 0f);
 
             CreateFittedSprite(
-                "Frame", Art(HudArt, "barra_vida_moldura"), HudTextSortingOrder - 1,
+                "Frame", Art(HudArt, "barra_vida_moldura"), HudFrameSortingOrder,
                 Vector3.zero, 1.95f, 0.34f, host.transform);
 
             var view = host.AddComponent<TowerHealthView>();
@@ -369,12 +445,12 @@ namespace PongRoyale.Editor
             host.transform.SetParent(parent, worldPositionStays: false);
 
             var backdrop = CreateSpriteObject(
-                "Backdrop", square, new Color(0.03f, 0.03f, 0.06f, 0.75f), HudBackgroundSortingOrder + 5,
+                "Backdrop", square, new Color(0.03f, 0.03f, 0.06f, 0.85f), HudOverlaySortingOrder,
                 Vector3.zero, new Vector3(config.Arena.Width, config.Arena.Height, 1f), host.transform);
 
             TextMesh label = CreateLabel(
                 "Label", host.transform, font, characterSize: 0.10f, fontSize: 60,
-                sortingOrder: HudTextSortingOrder + 5, anchor: TextAnchor.MiddleCenter);
+                sortingOrder: HudOverlaySortingOrder + 1, anchor: TextAnchor.MiddleCenter);
 
             var view = host.AddComponent<MatchResultView>();
             var serialized = new SerializedObject(view);

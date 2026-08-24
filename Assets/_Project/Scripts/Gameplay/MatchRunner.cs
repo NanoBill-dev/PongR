@@ -43,6 +43,10 @@ namespace PongRoyale.Gameplay
 
         public MatchConfig Config { get; private set; }
 
+        /// <summary>Abreviacao da carta, para as views mostrarem o que e o power-up.</summary>
+        public string CardAbbreviation(int effectId) =>
+            balanceData == null ? string.Empty : balanceData.CardAbbreviation(effectId);
+
         public bool IsReady => Simulation != null;
 
         private void Awake()
