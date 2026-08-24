@@ -54,3 +54,91 @@ Progressao -> conteudo -> monetizacao -> polish. Ver secao 30 do prompt mestre.
 ## Decisoes em aberto
 - D5 Backend de contas/progressao (UGS, PlayFab ou proprio) — decidir na FASE 4.
   No MVP: interface `IPlayerProfileService` com implementacao local em JSON.
+
+---
+
+## Playtest de 2026-08-24 — achados e plano
+
+### O diagnostico principal
+
+Dois sintomas relatados sao o MESMO problema:
+
+- "Power-ups nao estao decidindo a partida; habilidade no Pong ja basta"
+- "Nunca atingi a redencao"
+
+**Causa raiz: o portao de aquisicao esta tarde demais.**
+
+    torre lateral      2500 de vida
+    dano por acerto     250
+    acertos             10   <- para UM power-up nascer
+
+Dez acertos limpos em torre quase nao acontecem numa partida de 120 s. Quando
+acontecem, o jogador JA esta ganhando: o power-up vira trofeu de quem venceu, dura
+6 s e nao muda nada.
+
+A redencao morre pelo mesmo motivo. Ela exige um drop PERDIDO; se drops quase nao
+nascem, nao ha o que redimir. Os 60 s de ciclos limpos nem chegam a ser o gargalo.
+
+**Nao e falta de tempo nem cartas fracas. E a economia trancada atras de um evento
+raro.**
+
+### Correcao proposta
+
+Alvo: o primeiro drop deve aparecer por volta dos 30-40 s. Supondo que um bom
+jogador vaze cerca de uma bola a cada 10 s, isso significa 3 a 4 acertos.
+
+    hoje                        10 acertos para o 1o drop
+    drop em 50% e em 0%          5 acertos
+    + vida da lateral 2500->1500 3 acertos  <- alvo
+
+Recomendado: **drops em marcos de dano (50% e 0%) E vida da lateral para 1500**.
+O BallResolver ja detecta dano em torre; falta comparar a vida antes e depois com
+o limiar. A Torre Rei segue em 5000 como condicao de vitoria dificil.
+
+Aumentar a duracao da partida foi DESCARTADO por ora: mascararia o problema. So
+reavaliar depois que os drops chegarem cedo.
+
+### Bug conhecido, introduzido no commit da arte
+
+As barras aparecem pretas porque a MOLDURA foi desenhada por cima do
+preenchimento (ordem 99 contra 91) e o interior dela e opaco. Moldura vai para
+baixo do preenchimento.
+
+### Ordem de trabalho
+
+1. **Correcoes visuais baratas** (quase tudo dado ou ferramenta de cena)
+   - [ ] Moldura abaixo do preenchimento (bug acima)
+   - [ ] Barra de vida ABAIXO de cada torre; hoje aponta para o centro e cobre a raquete
+   - [ ] Barra de elixir borda a borda (largura 8 -> 10)
+   - [ ] Ordem de camadas: bola e raquete estao em 20 e a HUD em 90-100, entao a
+         bola passa POR BAIXO da barra central. Precisam ficar acima
+   - [ ] Fundo mais claro para dar contraste aos elementos
+
+2. **Indicador de power-up** — o mais valioso da lista
+   - [ ] Icone do efeito ativo perto da raquete, com tempo restante
+   - [ ] O drop caindo precisa mostrar QUAL carta e; hoje e um circulo generico
+   - Sem isso o sistema e invisivel, e sistema invisivel nao influencia decisao.
+     Provavelmente contribui para a sensacao do achado principal.
+
+3. **Drop em marcos de dano** — ataca a causa raiz
+
+4. **Tamanho das torres** — resolve dois problemas juntos: sprites pequenos demais
+   e o achatamento de 31% (a arte e mais alta que larga, a caixa e mais larga que
+   alta). Custo: vaos entre torres diminuem, muda como a bola passa.
+
+5. **Bot com decisoes** — hoje so persegue a bola. Precisa de prioridade por tick:
+   - drop caindo para mim e alcancavel antes da bola chegar? busca
+   - drop inimigo cruzando minha linha e ainda tenho interceptacao? rouba
+   - senao, persegue a bola
+   O interessante e que e a MESMA decisao que o humano enfrenta, o que faz do bot
+   um sparring de verdade. Botao de dificuldade: chance de sequer considerar o drop.
+   Sem isso nao da para testar interceptacao, porque o adversario nunca a usa.
+
+6. **Reavaliar duracao da partida** — com dados, depois do item 3
+
+### Adiados, com motivo
+
+- **Hitbox arredondada na raquete**: exige varredura circulo-contra-capsula,
+  mexendo no codigo mais testado do projeto, e o ganho e so nas pontas. Mitigacao
+  barata: estreitar a colisao ~0,1 para bater com a parte reta do sprite.
+- **Ranking e trofeus**: FASE 4. `TrophyConfig` ja existe com +30/-25/0 esperando.
