@@ -69,8 +69,9 @@ namespace PongRoyale.Editor
             EnsureFolder($"{PrefabFolder}/Paddle");
             EnsureFolder($"{PrefabFolder}/Towers");
             AssetDatabase.Refresh();
+            ConfigureArtImports();
 
-            BuildPrefabs(squarePath, circlePath);
+            BuildPrefabs(CombatArt + "raquete_azul.png", CombatArt + "bola.png");
 
             Scene scene = EditorSceneManager.OpenScene(MatchScenePath, OpenSceneMode.Single);
             ClearScene(scene);
@@ -119,6 +120,62 @@ namespace PongRoyale.Editor
 
             Debug.Log("[MatchScene] Cena Match reconstruida a partir do BalanceData.");
         }
+
+        private const string CombatArt = "Assets/_Project/Art/Combat/";
+        private const string HudArt = "Assets/_Project/Art/Hud/";
+
+        /// <summary>
+        /// Pixels por unidade de TODA a arte. 32 e escolhido para a bola de 16px medir
+        /// exatamente 0,5 unidade — o diametro dela no jogo. As demais views dividem pelo
+        /// tamanho nativo, entao o numero so precisa ser consistente.
+        /// </summary>
+        private const float ArtPixelsPerUnit = 32f;
+
+        /// <summary>
+        /// Configura os PNG entregues como pixel art: filtro Point, sem compressao e sem
+        /// mipmap. Sem isso o Unity importa com filtro bilinear e BORRA a arte — o erro mais
+        /// comum ao trazer pixel art para o Unity, e que so aparece com o jogo rodando.
+        /// </summary>
+        private static void ConfigureArtImports()
+        {
+            foreach (string folder in new[] { CombatArt, HudArt })
+            {
+                foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { folder.TrimEnd('/') }))
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                    var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                    if (importer == null)
+                    {
+                        continue;
+                    }
+
+                    importer.textureType = TextureImporterType.Sprite;
+                    importer.spriteImportMode = SpriteImportMode.Single;
+                    importer.spritePixelsPerUnit = ArtPixelsPerUnit;
+                    importer.filterMode = FilterMode.Point;
+                    importer.mipmapEnabled = false;
+                    importer.alphaIsTransparency = true;
+                    importer.textureCompression = TextureImporterCompression.Uncompressed;
+                    importer.SaveAndReimport();
+                }
+            }
+        }
+
+        /// <summary>Cria um sprite ja escalado para um tamanho de mundo.</summary>
+        private static GameObject CreateFittedSprite(
+            string name, Sprite sprite, int order, Vector3 position, float width, float height, Transform parent)
+        {
+            GameObject host = CreateSpriteObject(name, sprite, Color.white, order, position, Vector3.one, parent);
+            Vector2 native = sprite.bounds.size;
+            host.transform.localScale = new Vector3(width / native.x, height / native.y, 1f);
+            return host;
+        }
+
+        private static Sprite Art(string folder, string file) =>
+            AssetDatabase.LoadAssetAtPath<Sprite>(folder + file + ".png");
+
+        private static Texture2D ArtTexture(string file) =>
+            AssetDatabase.LoadAssetAtPath<Texture2D>(HudArt + file + ".png");
 
         private const int HudBackgroundSortingOrder = 90;
         private const int HudFillSortingOrder = 91;
@@ -179,16 +236,20 @@ namespace PongRoyale.Editor
             {
                 float x = (i - 1) * ChargeSpacing;
 
-                bottomCharges[i] = CreateSpriteObject(
-                    "ChargeBottom_" + i, square, Color.gray, HudFillSortingOrder,
-                    new Vector3(x, -ChargeOffsetY, 0f), new Vector3(ChargeSize, ChargeSize, 1f),
+                bottomCharges[i] = CreateFittedSprite(
+                    "ChargeBottom_" + i, Art(HudArt, "escudo_azul"), HudFillSortingOrder,
+                    new Vector3(x, -ChargeOffsetY, 0f), ChargeSize, ChargeSize,
                     host.transform).GetComponent<SpriteRenderer>();
 
-                topCharges[i] = CreateSpriteObject(
-                    "ChargeTop_" + i, square, Color.gray, HudFillSortingOrder,
-                    new Vector3(x, ChargeOffsetY, 0f), new Vector3(ChargeSize, ChargeSize, 1f),
+                topCharges[i] = CreateFittedSprite(
+                    "ChargeTop_" + i, Art(HudArt, "escudo_vermelho"), HudFillSortingOrder,
+                    new Vector3(x, ChargeOffsetY, 0f), ChargeSize, ChargeSize,
                     host.transform).GetComponent<SpriteRenderer>();
             }
+
+            CreateFittedSprite(
+                "BarFrame", Art(HudArt, "barra_essencia_moldura"), HudTextSortingOrder - 1,
+                Vector3.zero, BarWidth + 0.25f, BarHeight + 0.22f, host.transform);
 
             var view = host.AddComponent<ElixirCycleView>();
             var serialized = new SerializedObject(view);
@@ -264,6 +325,10 @@ namespace PongRoyale.Editor
                 sortingOrder: HudTextSortingOrder, anchor: TextAnchor.MiddleCenter);
             label.transform.localPosition = new Vector3(0f, 0.32f, 0f);
 
+            CreateFittedSprite(
+                "Frame", Art(HudArt, "barra_vida_moldura"), HudTextSortingOrder - 1,
+                Vector3.zero, 1.95f, 0.34f, host.transform);
+
             var view = host.AddComponent<TowerHealthView>();
             var serialized = new SerializedObject(view);
             serialized.FindProperty("runner").objectReferenceValue = runner;
@@ -324,17 +389,28 @@ namespace PongRoyale.Editor
             var host = new GameObject("DamageNumbers");
             host.transform.SetParent(parent, worldPositionStays: false);
 
-            var labels = new TextMesh[DamageNumberCount];
+            var labels = new SpriteNumber[DamageNumberCount];
             for (int i = 0; i < DamageNumberCount; i++)
             {
-                labels[i] = CreateLabel(
-                    $"Damage_{i}", host.transform, font, characterSize: 0.06f, fontSize: 60,
-                    sortingOrder: HudTextSortingOrder, anchor: TextAnchor.MiddleCenter);
+                var slot = new GameObject("Damage_" + i);
+                slot.transform.SetParent(host.transform, worldPositionStays: false);
+
+                var number = slot.AddComponent<SpriteNumber>();
+                var numberSerialized = new SerializedObject(number);
+                numberSerialized.FindProperty("atlas").objectReferenceValue = ArtTexture("numeros_branco");
+                numberSerialized.FindProperty("pixelsPerUnit").floatValue = ArtPixelsPerUnit * 0.55f;
+                numberSerialized.FindProperty("sortingOrder").intValue = HudTextSortingOrder;
+                numberSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+                labels[i] = number;
             }
 
             var view = host.AddComponent<DamageNumbersView>();
             var serialized = new SerializedObject(view);
             serialized.FindProperty("runner").objectReferenceValue = runner;
+            serialized.FindProperty("normalAtlas").objectReferenceValue = ArtTexture("numeros_branco");
+            serialized.FindProperty("takenAtlas").objectReferenceValue = ArtTexture("numeros_vermelho");
+            serialized.FindProperty("criticalAtlas").objectReferenceValue = ArtTexture("numeros_critico");
 
             SerializedProperty array = serialized.FindProperty("labels");
             array.arraySize = DamageNumberCount;
@@ -501,7 +577,11 @@ namespace PongRoyale.Editor
         {
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
             instance.name = $"Paddle_{slot}";
-            instance.GetComponent<SpriteRenderer>().color = color;
+
+            // A arte ja vem colorida por time, entao o sprite substitui o tingimento.
+            var paddleRenderer = instance.GetComponent<SpriteRenderer>();
+            paddleRenderer.sprite = Art(CombatArt, slot == PlayerSlot.Bottom ? "raquete_azul" : "raquete_vermelha");
+            paddleRenderer.color = Color.white;
 
             var serialized = new SerializedObject(instance.GetComponent<PaddleView>());
             serialized.FindProperty("runner").objectReferenceValue = runner;
@@ -521,6 +601,13 @@ namespace PongRoyale.Editor
                 {
                     var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, root.transform);
                     instance.name = $"Tower_{slot}_{kind}";
+
+                    // Rei usa a torre grande da arte; laterais usam a pequena.
+                    string team = slot == PlayerSlot.Bottom ? "azul" : "vermelha";
+                    string tier = kind == TowerKind.King ? "3" : "1";
+                    var towerRenderer = instance.GetComponent<SpriteRenderer>();
+                    towerRenderer.sprite = Art(CombatArt, $"torre_{team}_{tier}");
+                    towerRenderer.color = Color.white;
 
                     var serialized = new SerializedObject(instance.GetComponent<TowerView>());
                     serialized.FindProperty("runner").objectReferenceValue = runner;
@@ -570,11 +657,11 @@ namespace PongRoyale.Editor
         /// Gera os tres prefabs. Cada um recarrega o proprio sprite pelo caminho, porque
         /// salvar um prefab importa asset e invalida o que ja estava carregado.
         /// </summary>
-        private static void BuildPrefabs(string squarePath, string circlePath)
+        private static void BuildPrefabs(string paddlePath, string ballPath)
         {
-            SavePrefab(BallPrefabPath, "Ball", circlePath, BallSortingOrder, typeof(BallView));
-            SavePrefab(PaddlePrefabPath, "Paddle", squarePath, PaddleSortingOrder, typeof(PaddleView));
-            SavePrefab(TowerPrefabPath, "Tower", squarePath, TowerSortingOrder, typeof(TowerView));
+            SavePrefab(BallPrefabPath, "Ball", ballPath, BallSortingOrder, typeof(BallView));
+            SavePrefab(PaddlePrefabPath, "Paddle", paddlePath, PaddleSortingOrder, typeof(PaddleView));
+            SavePrefab(TowerPrefabPath, "Tower", CombatArt + "torre_azul_1.png", TowerSortingOrder, typeof(TowerView));
         }
 
         private static void SavePrefab(

@@ -29,7 +29,7 @@ namespace PongRoyale.Gameplay.Ball
 
             // O sprite tem 1 unidade de diametro, entao a escala e o diametro desejado.
             float diameter = runner.Config.Ball.Radius * 2f;
-            transform.localScale = new Vector3(diameter, diameter, 1f);
+            SpriteFitter.Fit(spriteRenderer, diameter, diameter);
         }
 
         private void LateUpdate()

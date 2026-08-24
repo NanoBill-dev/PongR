@@ -83,7 +83,13 @@ namespace PongRoyale.Tests.PlayMode
             var ballObject = GameObject.Find("Ball_0");
             float expectedDiameter = runner.Config.Ball.Radius * 2f;
 
-            Assert.AreEqual(expectedDiameter, ballObject.transform.localScale.x, Tolerance);
+            // Mede o tamanho RENDERIZADO, e nao a escala: com sprites de arte a escala deixa
+            // de ser igual ao tamanho de mundo, mas o que precisa bater com a colisao e o
+            // desenho final.
+            Assert.AreEqual(
+                expectedDiameter,
+                ballObject.GetComponent<SpriteRenderer>().bounds.size.x,
+                Tolerance);
         }
 
         [UnityTest]
@@ -114,7 +120,10 @@ namespace PongRoyale.Tests.PlayMode
             Assert.IsNotNull(top);
             Assert.Less(bottom.transform.position.y, 0f);
             Assert.Greater(top.transform.position.y, 0f);
-            Assert.AreEqual(runner.Config.Paddle.Width, bottom.transform.localScale.x, Tolerance);
+            Assert.AreEqual(
+                runner.Config.Paddle.Width,
+                bottom.GetComponent<SpriteRenderer>().bounds.size.x,
+                Tolerance);
         }
 
         [UnityTest]

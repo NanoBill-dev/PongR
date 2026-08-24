@@ -15,7 +15,7 @@ MonoBehaviour:
   arena:
     width: 10
     height: 18
-    paddleLineOffsetFromEdge: 2
+    paddleLineOffsetFromEdge: 2.1
   ball:
     initialSpeed: 8
     maxSpeed: 25
@@ -26,7 +26,7 @@ MonoBehaviour:
     minAngleFromHorizontalDegrees: 20
   paddle:
     width: 2.4
-    thickness: 0.4
+    thickness: 0.6
     maxSpeed: 18
     smoothingTime: 0.05
     dragSensitivity: 1

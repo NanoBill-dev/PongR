@@ -143,20 +143,19 @@ namespace PongRoyale.Tests.PlayMode
 
             yield return new WaitForSeconds(0.3f);
 
-            bool anyVisible = false;
+            // Com o atlas de glifos, "apareceu" significa ter renderers de digito ligados.
             var host = GameObject.Find("Hud/DamageNumbers");
+            int visibleGlyphs = 0;
 
-            for (int i = 0; i < host.transform.childCount; i++)
+            foreach (SpriteRenderer glyph in host.GetComponentsInChildren<SpriteRenderer>(includeInactive: true))
             {
-                GameObject child = host.transform.GetChild(i).gameObject;
-                if (child.activeSelf)
+                if (glyph.enabled && glyph.sprite != null)
                 {
-                    anyVisible = true;
-                    Assert.AreEqual("-250", child.GetComponent<TextMesh>().text);
+                    visibleGlyphs++;
                 }
             }
 
-            Assert.IsTrue(anyVisible, "Nenhum numero de dano apareceu apos a torre ser atingida.");
+            Assert.AreEqual(4, visibleGlyphs, "Esperado o desenho de \"-250\": quatro glifos.");
         }
 
         [UnityTest]

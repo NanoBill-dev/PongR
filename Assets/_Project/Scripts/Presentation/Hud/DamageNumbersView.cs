@@ -5,25 +5,39 @@ using UnityEngine;
 namespace PongRoyale.Presentation.Hud
 {
     /// <summary>
-    /// Numeros de dano flutuantes. Le a fila de eventos da simulacao e mostra o valor
-    /// REALMENTE aplicado — que com o decaimento de acertos consecutivos nem sempre e o
-    /// dano base. E aqui que o decaimento fica visivel: 250, depois 162, depois 106.
+    /// Numeros de dano flutuantes, desenhados com o atlas de glifos da arte.
     ///
-    /// Os rotulos sao criados uma unica vez e reciclados em rodizio. Nada de Instantiate no
-    /// meio da partida (secao 35): num pinball atras da raquete isso seria varias alocacoes
-    /// por segundo, justamente no momento de maior tensao.
+    /// Le a fila de eventos e mostra o valor REALMENTE aplicado — que com o decaimento de
+    /// acertos consecutivos nem sempre e o dano base. E aqui que o decaimento fica visivel.
+    ///
+    /// Os rotulos sao criados uma vez e reciclados em rodizio: num pinball atras da raquete
+    /// isso seria varias alocacoes por segundo, no pior momento possivel.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DamageNumbersView : MonoBehaviour
     {
         [SerializeField] private MatchRunner runner;
-        [SerializeField] private TextMesh[] labels;
+        [SerializeField] private SpriteNumber[] labels;
+
+        [Header("Atlas por situacao")]
+        [Tooltip("Dano comum contra as torres do adversario.")]
+        [SerializeField] private Texture2D normalAtlas;
+
+        [Tooltip("Dano sofrido pelas proprias torres. Vermelho avisa sem precisar ler.")]
+        [SerializeField] private Texture2D takenAtlas;
+
+        [Tooltip("Acerto forte: o primeiro de uma investida, sem decaimento.")]
+        [SerializeField] private Texture2D criticalAtlas;
 
         [Header("Animacao")]
         [SerializeField] private float lifetime = 0.9f;
         [SerializeField] private float riseSpeed = 1.4f;
 
-        private static readonly Color DamageColor = new Color(1f, 0.85f, 0.35f, 1f);
+        [Tooltip("Dano a partir do qual o numero usa o atlas de critico.")]
+        [SerializeField] private float criticalThreshold = 240f;
+
+        [Tooltip("Lado que o jogador local controla, para saber o que e dano sofrido.")]
+        [SerializeField] private Core.Simulation.PlayerSlot localSlot = Core.Simulation.PlayerSlot.Bottom;
 
         private float[] remainingLifetime;
         private int nextLabel;
@@ -34,7 +48,7 @@ namespace PongRoyale.Presentation.Hud
 
             for (int i = 0; i < labels.Length; i++)
             {
-                labels[i].gameObject.SetActive(false);
+                labels[i].Clear();
             }
         }
 
@@ -58,26 +72,31 @@ namespace PongRoyale.Presentation.Hud
 
                 if (matchEvent.Type == MatchEventType.TowerDamaged)
                 {
-                    Show(matchEvent.Position.ToWorldPosition(), matchEvent.Value);
+                    Show(matchEvent.Position.ToWorldPosition(), matchEvent.Value, matchEvent.Slot);
                 }
             }
         }
 
-        private void Show(Vector3 worldPosition, float damage)
+        private void Show(Vector3 worldPosition, float damage, Core.Simulation.PlayerSlot towerOwner)
         {
             if (labels.Length == 0)
             {
                 return;
             }
 
-            // Rodizio: o rotulo mais antigo e reaproveitado. Com muitos acertos seguidos o
-            // primeiro numero some antes da hora, o que e preferivel a alocar mais.
-            TextMesh label = labels[nextLabel];
+            SpriteNumber label = labels[nextLabel];
 
+            // O evento traz o dono da TORRE atingida: se for o lado local, o jogador esta
+            // apanhando, e o numero sai vermelho.
+            bool damageTaken = towerOwner == localSlot;
+            Texture2D atlas = damageTaken
+                ? takenAtlas
+                : (damage >= criticalThreshold ? criticalAtlas : normalAtlas);
+
+            label.SetAtlas(atlas);
+            label.SetTint(Color.white);
             label.transform.position = worldPosition;
-            label.text = $"-{Mathf.RoundToInt(damage)}";
-            label.color = DamageColor;
-            label.gameObject.SetActive(true);
+            label.Show("-" + Mathf.RoundToInt(damage));
 
             remainingLifetime[nextLabel] = lifetime;
             nextLabel = (nextLabel + 1) % labels.Length;
@@ -96,14 +115,12 @@ namespace PongRoyale.Presentation.Hud
 
                 if (remainingLifetime[i] <= 0f)
                 {
-                    labels[i].gameObject.SetActive(false);
+                    labels[i].Clear();
                     continue;
                 }
 
                 labels[i].transform.position += Vector3.up * (riseSpeed * Time.deltaTime);
-
-                float fade = remainingLifetime[i] / lifetime;
-                labels[i].color = new Color(DamageColor.r, DamageColor.g, DamageColor.b, fade);
+                labels[i].SetTint(new Color(1f, 1f, 1f, remainingLifetime[i] / lifetime));
             }
         }
     }

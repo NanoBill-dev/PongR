@@ -22,10 +22,10 @@ namespace PongRoyale.Gameplay.Paddle
                 return;
             }
 
-            transform.localScale = new Vector3(
+            SpriteFitter.Fit(
+                GetComponent<SpriteRenderer>(),
                 runner.Config.Paddle.Width,
-                runner.Config.Paddle.Thickness,
-                1f);
+                runner.Config.Paddle.Thickness);
 
             lineY = runner.Simulation.State.GetPaddle(slot).LineY;
         }

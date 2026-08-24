@@ -36,7 +36,7 @@ namespace PongRoyale.Gameplay.Towers
             var tower = runner.Simulation.State.GetTower(owner, kind);
 
             transform.position = tower.Position.ToWorldPosition();
-            transform.localScale = new Vector3(tower.HalfWidth * 2f, tower.HalfHeight * 2f, 1f);
+            SpriteFitter.Fit(spriteRenderer, tower.HalfWidth * 2f, tower.HalfHeight * 2f);
         }
 
         private void LateUpdate()
