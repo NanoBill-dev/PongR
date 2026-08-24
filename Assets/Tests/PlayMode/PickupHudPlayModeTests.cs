@@ -54,6 +54,38 @@ namespace PongRoyale.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator NoPassableCorridorBetweenPaddleAndTowers()
+        {
+            // Le a geometria REALMENTE enviada no BalanceData, e nao a do TestConfigs: e a
+            // unica forma de proteger o balanceamento que o jogador recebe.
+            //
+            // O corredor entre a raquete e as torres tinha exatamente o diametro da bola, e
+            // ela passava. Nao era so feio: cada acerto na torre gasta uma carga de defesa, e
+            // gastar carga zera a sequencia limpa — com a bola pinballando la atras, os tres
+            // ciclos limpos que a redencao exige nunca aconteciam. Um sistema inteiro morto
+            // por meia unidade de geometria.
+            MatchRunner runner = FindRunner();
+            yield return null;
+
+            MatchConfig config = runner.Config;
+
+            float paddleBackFace =
+                config.Arena.HalfHeight - config.Arena.PaddleLineOffsetFromEdge + config.Paddle.Thickness * 0.5f;
+            float towerRow = config.Arena.HalfHeight - config.Tower.RowOffsetFromEdge;
+            float ballDiameter = config.Ball.Radius * 2f;
+
+            float guardGap = (towerRow - config.Tower.GuardHalfSize.Y) - paddleBackFace;
+            float kingGap = (towerRow - config.Tower.KingHalfSize.Y) - paddleBackFace;
+
+            Assert.Less(
+                guardGap, ballDiameter,
+                $"A bola cabe no vao ate as torres laterais ({guardGap:0.00} >= {ballDiameter:0.00}).");
+            Assert.Less(
+                kingGap, ballDiameter,
+                $"A bola cabe no vao ate a Torre Rei ({kingGap:0.00} >= {ballDiameter:0.00}).");
+        }
+
+        [UnityTest]
         public IEnumerator PickupViewsExistAndStartHidden()
         {
             yield return null;

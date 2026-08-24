@@ -15,7 +15,7 @@ MonoBehaviour:
   arena:
     width: 10
     height: 18
-    paddleLineOffsetFromEdge: 2.5
+    paddleLineOffsetFromEdge: 2
   ball:
     initialSpeed: 8
     maxSpeed: 25
